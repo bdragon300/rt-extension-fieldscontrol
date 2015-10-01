@@ -1,0 +1,56 @@
+% # Field name
+<div class="elgrp field">
+    <div class="el">
+        <span class="label">Field</span>
+        <select name="rule<% $rule_num %>field<% $field_num %>">
+            <option></option>
+% my $d = (@$ldata) ? shift @$ldata : [];
+% my $sel = (@$lactual_values) ? @{shift @$lactual_values}[0] : '';
+% foreach my $i (@$d) {
+            <option value="<% $i %>" <% ($sel eq $i) ? 'selected' : '' %>><% $i %></option>
+% }
+        </select>
+    </div>
+%
+% # Operations
+% $d = (@$ldata) ? shift @$ldata : [];
+% $sel = (@$lactual_values) ? @{shift @$lactual_values}[0] : '';
+    <div class="el">
+        <span class="label">Operation</span>
+        <select name="rule<% $rule_num %>op<% $field_num %>">
+            <option></option>
+% foreach my $i (@$d) {
+            <option value="<% $i %>" <% ($sel eq $i) ? 'selected' : '' %>><% $i %></option>
+% }
+        </select>
+    </div>
+%
+% # Value
+% my $val = (@$lactual_values) ? @{shift @$lactual_values}[0] : '';
+    <div class="el">
+        <span class="label">Value</span>
+        <input type="text" name="rule<% $rule_num %>value<% $field_num %>" value="<% $val %>" />
+    </div>
+    <div class="el">
+        <span class="label">&nbsp;</span>
+        <input id="rule<% $rule_num %>deletefield<% $field_num %>" name="rule<% $rule_num %>deletefield<% $field_num %>" class="checkbox" type="checkbox"><label for="rule<% $rule_num %>deletefield<% $field_num %>">DELETE FIELD?</label>
+    </div>
+</div>
+
+<%init>
+if ($dummy)
+{
+	$rule_num = '%d';
+	$field_num = '%e';
+}
+my $ldata = [@$data];
+my $lactual_values = [@$actual_values];
+</%init>
+
+<%args>
+$data => []
+$actual_values => []
+$dummy => 0
+$rule_num => 1
+$field_num => 1
+</%args>

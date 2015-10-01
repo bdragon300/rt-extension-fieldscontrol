@@ -1,0 +1,148 @@
+<& /Admin/Elements/Header, Title => $title &>
+<& /Elements/Tabs &>
+
+<& /Elements/ListActions, actions => \@results &>
+
+<style>
+    .el span.label {
+        display: block;
+        text-align: left;
+    }
+    .elgrp div.el {
+        display: inline-block;
+        margin: 10px 5px;
+        vertical-align: top;
+    }
+    .field-container .field div.el{
+        margin: 0;
+    }
+    .reject-new-rule {
+        display: none !important;
+    }
+</style>
+<div class="reject-new-rule">
+    <& Elements/RejectRule, dummy => 1 &>
+</div>
+<form action="/Admin/Tools/RejectUpdate" method="post">
+    <div id="reject-rules">
+% my $rule_num = 1;
+% foreach my $rule (@{$config}) {
+%   my $rule_data = [
+%       [$rule->{'rulename'}],
+%       [$rule->{'searchsql'}],
+%       $rule->{'fields'}
+%   ];
+<& Elements/RejectRule, actual_values => $rule_data, rule_num => $rule_num &>
+% $rule_num++;
+% }
+    </div>
+    <input id="reject-add-rule" class="button" type="button" value="Add rule" />
+    <& /Elements/Submit, Name => 'reject-submit', Label => loc('Save Changes') &>
+</form>
+
+<script type="text/javascript">
+    function add_field(e) {
+        rule_num = jQuery("#reject-rules input.rule-num").index(jQuery(e.target).parent().parent().parent().find('input.rule-num'));
+
+        field_container = jQuery(e.target).parent().siblings(".field-container");
+        fields_count = field_container.find(".field").size();
+        str = jQuery(".reject-new-rule .field-container").html().replace(/%d/g, rule_num + 1).replace(/%e/g, fields_count + 1);
+
+        field_container.append(str);
+    }
+
+    jQuery("#reject-add-rule").click(function() {
+        rules_count = jQuery("#reject-rules > .reject-rule").size();
+        str = jQuery(".reject-new-rule").html().replace(/%d/g, rules_count + 1).replace(/%e/g, "1");
+
+        inserted = jQuery("#reject-rules").append(str);
+        jQuery(".reject-add-field").last().click(add_field);
+    });
+
+    jQuery(".reject-add-field").click(add_field);4
+</script>
+
+<%init>
+my $title = loc('Reject ticket configuration');
+unless ($session{'CurrentUser'}->HasRight( Object=> $RT::System, Right => 'SuperUser')) {
+    Abort(loc('This feature is only available to system administrators'));
+}
+
+use RT::CurrentUser;
+use RT::SQL;
+use Data::Dumper qw(Dumper);
+my $config = RT::Extension::RejectUpdate::load_config;
+my @results;
+
+if ($ARGS{'reject-submit'}) {
+    my $i = 1;
+    my @items = ();
+    my $tickets = RT::Tickets->new( RT::SystemUser ); #Object for checking SQL correctness
+    while (defined $ARGS{'rule' . $i}) {
+        if (defined $ARGS{'ruledelete' . $i}) {
+            $i++;
+            next;
+        }
+        my %item = ();
+
+        # Check whether SQL correct
+        foreach my $key (('searchsql')) {
+            my $val = $ARGS{$key . $i};
+            push @results, "Empty ${key} in rule ${i}" unless $val;
+            my ($res, $msg) = $tickets->FromSQL($val);
+
+            unless ($res) {
+                push @results, "Unable to parse ${key} rule ${i}: " . $msg;
+            }
+            $item{$key} = $val;
+        }
+        
+        my $j = 1;
+        my @fields = ();
+        while (defined $ARGS{'rule' . $i . 'field' . $j}) {
+            my $f = $ARGS{'rule' . $i . 'field' . $j};
+            my $op = $ARGS{'rule' . $i . 'op' . $j};
+            my $val = $ARGS{'rule' . $i . 'value' . $j};
+
+            if (defined $ARGS{'rule' . $i . 'deletefield' . $j}) {
+                $j++;
+                next;
+            }
+
+            if (grep(/^${f}$/, @${RT::Extension::RejectUpdate::available_fields})
+                && grep(/^${op}$/, keys %${RT::Extension::RejectUpdate::available_ops}))
+            {
+                push @fields, {
+                    'field' => $f,
+                    'op' => $op,
+                    'value' => $val
+                };
+            } else {
+                push @results, "Incorrect field spec, rule ${i} field ${j}";
+            }
+            $j++;
+        }
+
+        if (@fields) {
+            $item{'fields'} = [@fields];
+        } else {
+            push @results, "Fields are not set, rule ${i}";
+        }
+
+        push @results, "Empty name, rule ${i}" unless ($ARGS{'rulename' . $i});
+        $item{'rulename'} = $ARGS{'rulename' . $i};
+
+        push @items, {%item};
+        $i++;
+    }
+
+    if (@results) {
+        $config = \@items;
+    } else {
+        RT::Extension::RejectUpdate::write_config(\@items);
+        push @results, 'Configuration saved';
+        $config = RT::Extension::RejectUpdate::load_config();
+    }
+
+}
+</%init>

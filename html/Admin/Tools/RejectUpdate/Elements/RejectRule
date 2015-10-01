@@ -1,0 +1,66 @@
+% my $val;
+<&| /Widgets/TitleBox,title => 'Rule ' . $rule_num, class=>'reject-rule', 'rolledup'=>0 &>
+    <div class="elgrp">
+        <div class="el">
+            <span class="label">Rule name</span>
+%   $val = (@$lactual_values) ? @{shift @$lactual_values}[0] : '';
+            <input type="text" name="rulename<% $rule_num %>" value="<% $val %>" />
+        </div>
+        <div class="el">
+            <span class="label">&nbsp;</span>
+            <input id="ruledelete<% $rule_num %>" name="ruledelete<% $rule_num %>" class="checkbox" type="checkbox">
+            <label for="ruledelete<% $rule_num %>">DELETE?</label>
+        </div>
+    </div>
+    <div class="elgrp">
+        <div class="el">
+            <span class="label">Apply to tickets</span>
+%   $val = (@$lactual_values) ? @{shift @$lactual_values}[0] : '';
+            <textarea cols="40" rows="6" name="searchsql<% $rule_num %>"><% $val %></textarea>
+        </div>
+        <div class="el">
+            <span class="label">REJECT IF ALL MATCH</span>
+            <div class="field-container">
+%  my @ops = sort keys %${RT::Extension::RejectUpdate::available_ops};
+%  my $field_data = [
+%       ${RT::Extension::RejectUpdate::available_fields},
+%       \@ops
+%  ];
+%   my $field_num = 1;
+%   my $fields = (@$lactual_values) ? shift @$lactual_values : [];
+%   foreach my $config_field (@$fields) {
+%       my $field_actual_values = [
+%           [$config_field->{'field'}],
+%           [$config_field->{'op'}],
+%           [$config_field->{'value'}]
+%       ];
+<& RejectField, field_num => $field_num, rule_num => $rule_num, data => $field_data, actual_values => $field_actual_values &>
+%       $field_num++;
+%   }
+%  if ($dummy) {
+<& RejectField, dummy => 1, data => $field_data &>
+%  } elsif (scalar(@$fields) == 0) {
+<& RejectField, rule_num => $rule_num, data => $field_data &>
+%  }
+            </div>
+            <div class="elgrp">
+                <input class="reject-add-field button" type="button" value="Add field" id="add-field<% $rule_num %>" />
+            </div>
+        </div>
+        <input type="hidden" class="rule-num" name="rule<% $rule_num %>" />
+    </div>
+</&>
+
+<%init>
+if ($dummy)
+{
+    $rule_num = '%d';
+}
+my $lactual_values = [@$actual_values];
+</%init>
+
+<%args>
+$actual_values => []
+$rule_num => 1
+$dummy => 0
+</%args>
