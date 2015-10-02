@@ -20,10 +20,8 @@
         display: none !important;
     }
 </style>
-% my @ops = sort keys %${RT::Extension::RejectUpdate::available_ops};
-% my @fields = sort keys %${RT::Extension::RejectUpdate::available_fields};
 % my $rule_data = {
-%   fields => \@fields,
+%   fields => \@fields_list,
 %   operations => \@ops
 % };
 <div class="reject-new-rule">
@@ -75,6 +73,9 @@ unless ($session{'CurrentUser'}->HasRight( Object=> $RT::System, Right => 'Super
     Abort(loc('This feature is only available to system administrators'));
 }
 
+my @ops = sort keys %${RT::Extension::RejectUpdate::available_ops};
+my @fields_list = sort keys %{RT::Extension::RejectUpdate::get_fields_list()};
+
 use RT::CurrentUser;
 use RT::SQL;
 use Data::Dumper qw(Dumper);
@@ -105,7 +106,7 @@ if ($ARGS{'reject-submit'}) {
         }
         
         my $j = 1;
-        my @fields = ();
+        my @rule_fields = ();
         while (defined $ARGS{'rule' . $i . 'field' . $j}) {
             my $f = $ARGS{'rule' . $i . 'field' . $j};
             my $op = $ARGS{'rule' . $i . 'op' . $j};
@@ -116,10 +117,10 @@ if ($ARGS{'reject-submit'}) {
                 next;
             }
 
-            if (exists(${RT::Extension::RejectUpdate::available_fields}->{$f})
-                && exists(${RT::Extension::RejectUpdate::available_ops}->{$op}))
+            if (exists($fields_list[$f])
+                && exists($ops[$op]))
             {
-                push @fields, {
+                push @rule_fields, {
                     'field' => $f,
                     'op' => $op,
                     'value' => $val
@@ -130,8 +131,8 @@ if ($ARGS{'reject-submit'}) {
             $j++;
         }
 
-        if (@fields) {
-            $item{'fields'} = [@fields];
+        if (@rule_fields) {
+            $item{'fields'} = [@rule_fields];
         } else {
             push @results, "Fields are not set, rule ${i}";
         }

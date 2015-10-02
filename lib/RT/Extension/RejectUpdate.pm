@@ -43,19 +43,41 @@ our $available_ops = {
     '!~' => sub { $_[0] !~ /$_[1]/; }
 };
 
+sub get_fields_list {
+    my $res = {%$available_fields};
+
+    my $cfs = RT::CustomFields->new( RT::SystemUser );
+    $cfs->Limit(FIELD => 'id', OPERATOR => '!=', VALUE => '0');
+    while (my $cf = $cfs->Next) {
+        next if (($cf->Type ne 'Text') && ($cf->Type ne 'Freeform')); # TODO: match with all types of CFs
+        $res->{'CF.' . $cf->Name} = $cf->id;
+    }
+
+    return $res;
+}
+
 sub retrieve_mason_args {
     my $ARGSRef = shift;
 
-    my %res = ();
-    foreach (grep /^Ticket./, keys %$available_fields) {
-        $res{$_} = (defined $ARGSRef->{$available_fields->{$_}}) ? $ARGSRef->{$available_fields->{$_}} : undef;
+    my $res = {};
+    my $fields = get_fields_list;
+    foreach (grep /^Ticket./, keys %$fields) {
+        $res->{$_} = (defined $ARGSRef->{$fields->{$_}}) ? $ARGSRef->{$fields->{$_}} : undef;
     }
 
-    foreach (grep /^Transaction./, keys %$available_fields) {
-        $res{$_} = (defined $ARGSRef->{$available_fields->{$_}}) ? $ARGSRef->{$available_fields->{$_}} : undef;
+    foreach (grep /^Transaction./, keys %$fields) {
+        $res->{$_} = (defined $ARGSRef->{$fields->{$_}}) ? $ARGSRef->{$fields->{$_}} : undef;
     }
 
-    return \%res;
+    foreach my $cf_abbr (grep /^CF./, keys %$fields) {
+        my $cf_id = $fields->{$cf_abbr};
+        my @arg_val = grep /^Object-[:\w]+-[0-9]+-CustomField-${cf_id}-Value[^-]$/, keys %$ARGSRef;
+        foreach (@arg_val) {
+            $res->{$cf_abbr} = $ARGSRef->{$_};
+            last;
+        }
+    }
+    return $res;
 }
 
 sub load_config {
