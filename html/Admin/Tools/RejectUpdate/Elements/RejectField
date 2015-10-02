@@ -1,32 +1,34 @@
 % # Field name
+% my $d;
+% my $val;
 <div class="elgrp field">
     <div class="el">
         <span class="label">Field</span>
         <select name="rule<% $rule_num %>field<% $field_num %>">
             <option></option>
-% my $d = (@$ldata) ? shift @$ldata : [];
-% my $sel = (@$lactual_values) ? @{shift @$lactual_values}[0] : '';
+% $d = (exists $data->{'fields'}) ? $data->{'fields'} : [];
+% $val = (exists $actual_values->{'field'}) ? @{$actual_values->{'field'}}[0] : '';
 % foreach my $i (@$d) {
-            <option value="<% $i %>" <% ($sel eq $i) ? 'selected' : '' %>><% $i %></option>
+            <option value="<% $i %>" <% ($val eq $i) ? 'selected' : '' %>><% $i %></option>
 % }
         </select>
     </div>
 %
 % # Operations
-% $d = (@$ldata) ? shift @$ldata : [];
-% $sel = (@$lactual_values) ? @{shift @$lactual_values}[0] : '';
+% $d = (exists $data->{'operations'}) ? $data->{'operations'} : [];
+% $val = (exists $actual_values->{'op'}) ? @{$actual_values->{'op'}}[0] : '';
     <div class="el">
         <span class="label">Operation</span>
         <select name="rule<% $rule_num %>op<% $field_num %>">
             <option></option>
 % foreach my $i (@$d) {
-            <option value="<% $i %>" <% ($sel eq $i) ? 'selected' : '' %>><% $i %></option>
+            <option value="<% $i %>" <% ($val eq $i) ? 'selected' : '' %>><% $i %></option>
 % }
         </select>
     </div>
 %
 % # Value
-% my $val = (@$lactual_values) ? @{shift @$lactual_values}[0] : '';
+% $val = (exists $actual_values->{'value'}) ? @{$actual_values->{'value'}}[0] : '';
     <div class="el">
         <span class="label">Value</span>
         <input type="text" name="rule<% $rule_num %>value<% $field_num %>" value="<% $val %>" />
@@ -43,13 +45,11 @@ if ($dummy)
 	$rule_num = '%d';
 	$field_num = '%e';
 }
-my $ldata = [@$data];
-my $lactual_values = [@$actual_values];
 </%init>
 
 <%args>
-$data => []
-$actual_values => []
+$data => {}
+$actual_values => {}
 $dummy => 0
 $rule_num => 1
 $field_num => 1

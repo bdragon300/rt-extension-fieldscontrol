@@ -10,36 +10,31 @@ use Data::Dumper qw(Dumper);
 our $VERSION = '0.1';
 our $PACKAGE = __PACKAGE__;
 
-our $available_fields = [
-    ## Message details
-    'Ticket::Requestors',
-    'Ticket::Cc',
-    'Ticket::AdminCc',
-    'Ticket::Subject',
-    'Ticket::Content',
-    'Ticket::Attach',
-    ## Meta data
-    'Ticket::Status',
-    'Ticket::Owner',
-    ## Basics
-    'Ticket::Priority',
-    'Ticket::InitialPriority',
-    'Ticket::FinalPriority',
-    'Ticket::TimeEstimated',
-    'Ticket::TimeWorked',
-    'Ticket::TimeLeft',
-    ## Dates
-    'Ticket::Starts',
-    'Ticket::Due',
-    ## Links
-    'Ticket::new-DependsOn',
-    'Ticket::DependsOn-new',
-    'Ticket::new-MemberOf',
-    'Ticket::MemberOf-new',
-    'Ticket::new-RefersTo',
-    'Ticket::RefersTo-new',
-    'Transaction::UpdateTimeWorked'
-];
+our $available_fields = {
+    'Ticket.Requestors'             => 'Requestors',
+    'Ticket.Cc'                     => 'Cc',
+    'Ticket.AdminCc'                => 'AdminCc',
+    'Ticket.Subject'                => 'Subject',
+    'Ticket.Content'                => 'Content',
+    'Ticket.Attach'                 => 'Attach',
+    'Ticket.Status'                 => 'Status',
+    'Ticket.Owner'                  => 'Owner',
+    'Ticket.Priority'               => 'Priority',
+    'Ticket.InitialPriority'        => 'InitialPriority',
+    'Ticket.FinalPriority'          => 'FinalPriority',
+    'Ticket.TimeEstimated'          => 'TimeEstimated',
+    'Ticket.TimeWorked'             => 'TimeWorked',
+    'Ticket.TimeLeft'               => 'TimeLeft',
+    'Ticket.Starts'                 => 'Starts',
+    'Ticket.Due'                    => 'Due',
+    'Ticket.new-DependsOn'          => 'new-DependsOn',
+    'Ticket.DependsOn-new'          => 'DependsOn-new',
+    'Ticket.new-MemberOf'           => 'new-MemberOf',
+    'Ticket.MemberOf-new'           => 'MemberOf-new',
+    'Ticket.new-RefersTo'           => 'new-RefersTo',
+    'Ticket.RefersTo-new'           => 'RefersTo-new',
+    'Transaction.Worked'            => 'UpdateTimeWorked'
+};
 
 our $available_ops = {
     '==' => sub { $_[0] eq $_[1]; },
@@ -52,12 +47,12 @@ sub retrieve_mason_args {
     my $ARGSRef = shift;
 
     my %res = ();
-    foreach (map /::(\S+)$/, grep /^Ticket/, @$available_fields) {
-        $res{'Ticket::' . $_} = (defined $ARGSRef->{$_}) ? $ARGSRef->{$_} : undef;
+    foreach (grep /^Ticket./, keys %$available_fields) {
+        $res{$_} = (defined $ARGSRef->{$available_fields->{$_}}) ? $ARGSRef->{$available_fields->{$_}} : undef;
     }
 
-    foreach (map /::(\S+)$/, grep /^Transaction/, @$available_fields) {
-        $res{'Transaction::' . $_} = (defined $ARGSRef->{$_}) ? $ARGSRef->{$_} : undef;
+    foreach (grep /^Transaction./, keys %$available_fields) {
+        $res{$_} = (defined $ARGSRef->{$available_fields->{$_}}) ? $ARGSRef->{$available_fields->{$_}} : undef;
     }
 
     return \%res;

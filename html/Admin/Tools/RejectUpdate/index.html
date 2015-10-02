@@ -20,19 +20,26 @@
         display: none !important;
     }
 </style>
+% my @ops = sort keys %${RT::Extension::RejectUpdate::available_ops};
+% my @fields = sort keys %${RT::Extension::RejectUpdate::available_fields};
+% my $rule_data = {
+%   fields => \@fields,
+%   operations => \@ops
+% };
 <div class="reject-new-rule">
-    <& Elements/RejectRule, dummy => 1 &>
+    <& Elements/RejectRule, dummy => 1, data => $rule_data &>
 </div>
 <form action="/Admin/Tools/RejectUpdate" method="post">
     <div id="reject-rules">
 % my $rule_num = 1;
+%
 % foreach my $rule (@{$config}) {
-%   my $rule_data = [
-%       [$rule->{'rulename'}],
-%       [$rule->{'searchsql'}],
-%       $rule->{'fields'}
-%   ];
-<& Elements/RejectRule, actual_values => $rule_data, rule_num => $rule_num &>
+%   my $rule_actual_values = {
+%       rulename => [$rule->{'rulename'}],
+%       searchsql => [$rule->{'searchsql'}],
+%       fields => $rule->{'fields'}
+%   };
+<& Elements/RejectRule, data => $rule_data, actual_values => $rule_actual_values, rule_num => $rule_num &>
 % $rule_num++;
 % }
     </div>
@@ -109,8 +116,8 @@ if ($ARGS{'reject-submit'}) {
                 next;
             }
 
-            if (grep(/^${f}$/, @${RT::Extension::RejectUpdate::available_fields})
-                && grep(/^${op}$/, keys %${RT::Extension::RejectUpdate::available_ops}))
+            if (exists(${RT::Extension::RejectUpdate::available_fields}->{$f})
+                && exists(${RT::Extension::RejectUpdate::available_ops}->{$op}))
             {
                 push @fields, {
                     'field' => $f,

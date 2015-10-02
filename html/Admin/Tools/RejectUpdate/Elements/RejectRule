@@ -3,7 +3,7 @@
     <div class="elgrp">
         <div class="el">
             <span class="label">Rule name</span>
-%   $val = (@$lactual_values) ? @{shift @$lactual_values}[0] : '';
+%   $val = (exists $actual_values->{'rulename'}) ? @{$actual_values->{'rulename'}}[0] : '';
             <input type="text" name="rulename<% $rule_num %>" value="<% $val %>" />
         </div>
         <div class="el">
@@ -15,25 +15,24 @@
     <div class="elgrp">
         <div class="el">
             <span class="label">Apply to tickets</span>
-%   $val = (@$lactual_values) ? @{shift @$lactual_values}[0] : '';
+%   $val = (exists $actual_values->{'searchsql'}) ? @{$actual_values->{'searchsql'}}[0] : '';
             <textarea cols="40" rows="6" name="searchsql<% $rule_num %>"><% $val %></textarea>
         </div>
         <div class="el">
             <span class="label">REJECT IF ALL MATCH</span>
             <div class="field-container">
-%  my @ops = sort keys %${RT::Extension::RejectUpdate::available_ops};
-%  my $field_data = [
-%       ${RT::Extension::RejectUpdate::available_fields},
-%       \@ops
-%  ];
+%  my $field_data = {
+%   fields => $data->{'fields'},
+%   operations => $data->{'operations'}
+%  };
 %   my $field_num = 1;
-%   my $fields = (@$lactual_values) ? shift @$lactual_values : [];
+%   my $fields = (exists $actual_values->{'fields'}) ? $actual_values->{'fields'} : [];
 %   foreach my $config_field (@$fields) {
-%       my $field_actual_values = [
-%           [$config_field->{'field'}],
-%           [$config_field->{'op'}],
-%           [$config_field->{'value'}]
-%       ];
+%       my $field_actual_values = {
+%           field => [$config_field->{'field'}],
+%           op => [$config_field->{'op'}],
+%           value => [$config_field->{'value'}]
+%       };
 <& RejectField, field_num => $field_num, rule_num => $rule_num, data => $field_data, actual_values => $field_actual_values &>
 %       $field_num++;
 %   }
@@ -56,11 +55,11 @@ if ($dummy)
 {
     $rule_num = '%d';
 }
-my $lactual_values = [@$actual_values];
 </%init>
 
 <%args>
-$actual_values => []
+$data => {}
+$actual_values => {}
 $rule_num => 1
 $dummy => 0
 </%args>
