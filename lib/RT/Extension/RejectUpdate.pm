@@ -37,19 +37,18 @@ our $available_fields = {
 };
 
 our $available_ops = {
-    '==' => sub { $_[0] eq $_[1]; },
-    '!=' => sub { $_[0] ne $_[1]; },
-    '=~' => sub { $_[0] =~ /$_[1]/; },
-    '!~' => sub { $_[0] !~ /$_[1]/; }
+    '=='    => sub { (ref($_[0]) eq 'ARRAY') ? grep(/^$_[1]$/, @{$_[0]}) : ($_[0] eq $_[1]); },
+    '!='    => sub { (ref($_[0]) eq 'ARRAY') ? grep(!/^$_[1]$/, @{$_[0]}) : ($_[0] ne $_[1]); },
+    '=~'    => sub { (ref($_[0]) eq 'ARRAY') ? grep(/$_[1]/, @{$_[0]}) : ($_[0] =~ /$_[1]/); },
+    '!~'    => sub { (ref($_[0]) eq 'ARRAY') ? grep(!/$_[1]/, @{$_[0]}) : ($_[0] !~ /$_[1]/); },
 };
 
 sub get_fields_list {
     my $res = {%$available_fields};
 
     my $cfs = RT::CustomFields->new( RT::SystemUser );
-    $cfs->Limit(FIELD => 'id', OPERATOR => '!=', VALUE => '0');
+    $cfs->Limit(FIELD => 'id', OPERATOR => '>=', VALUE => '0');
     while (my $cf = $cfs->Next) {
-        next if (($cf->Type ne 'Text') && ($cf->Type ne 'Freeform')); # TODO: match with all types of CFs
         $res->{'CF.' . $cf->Name} = $cf->id;
     }
 
@@ -102,7 +101,7 @@ sub write_config {
     my $cfg = RT::Attributes->new( RT::SystemUser );
     $cfg->LimitToObject(RT::System);
     my @all_attrs = $cfg->Named('RejectUpdateConfig');
-    foreach (@all_attrs) {
+    foreach (@all_attrs) { #FIXME: modify existing attr instead creating new one
         $_->Delete;
     }
 
@@ -142,17 +141,17 @@ sub check_ticket {
         foreach my $field (@{$rule->{'fields'}}) {
             my $f = $field->{'field'};
             my $op = $field->{'op'};
-            my $val = $field->{'value'};
+            my $conf_value = $field->{'value'};
 
             unless (defined $available_ops->{$op}) 
             {
                 return (0, 'ERROR: Incorrect config: rule ' . $rule_name . ' field ' . $f);
             }
 
-            my $field_value = $values->{$f};
-            next unless defined $field_value;
+            my $new_value = $values->{$f};
+            next unless defined $new_value;
 
-            my $op_res = $available_ops->{$op}($field_value, $val);
+            my $op_res = $available_ops->{$op}($new_value, $conf_value);
             if ($op_res) {
                 push @incorrect_fields, $f;
             }

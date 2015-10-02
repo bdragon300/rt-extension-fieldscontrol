@@ -79,6 +79,7 @@ my @fields_list = sort keys %{RT::Extension::RejectUpdate::get_fields_list()};
 use RT::CurrentUser;
 use RT::SQL;
 use Data::Dumper qw(Dumper);
+
 my $config = RT::Extension::RejectUpdate::load_config;
 my @results;
 
