@@ -35,6 +35,7 @@
 %   my $rule_actual_values = {
 %       rulename => [$rule->{'rulename'}],
 %       searchsql => [$rule->{'searchsql'}],
+%       aggregtype => [$rule->{'aggregtype'}],
 %       fields => $rule->{'fields'}
 %   };
 <& Elements/RejectRule, data => $rule_data, actual_values => $rule_actual_values, rule_num => $rule_num &>
@@ -140,6 +141,15 @@ if ($ARGS{'reject-submit'}) {
 
         push @results, "Empty name, rule ${i}" unless ($ARGS{'rulename' . $i});
         $item{'rulename'} = $ARGS{'rulename' . $i};
+
+        my $aggreg_type = $ARGS{'rule' . $i . 'aggregtype'};
+        if ($aggreg_type eq 'EACH' 
+            || $aggreg_type eq 'ANY') 
+        {
+            $item{'aggregtype'} = $aggreg_type;
+        } else {
+            push @results, "Aggregation type is incorrect, rule ${i}";
+        }
 
         push @items, {%item};
         $i++;

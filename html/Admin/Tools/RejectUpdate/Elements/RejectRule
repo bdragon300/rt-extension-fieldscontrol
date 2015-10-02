@@ -19,7 +19,6 @@
             <textarea cols="40" rows="6" name="searchsql<% $rule_num %>"><% $val %></textarea>
         </div>
         <div class="el">
-            <span class="label">REJECT IF ANY MATCH</span>
             <div class="field-container">
 %  my $field_data = {
 %   fields => $data->{'fields'},
@@ -47,6 +46,12 @@
             </div>
         </div>
         <input type="hidden" class="rule-num" name="rule<% $rule_num %>" />
+    </div>
+    <div class="elgrp">
+%   $val = (exists $actual_values->{'aggregtype'}) ? @{$actual_values->{'aggregtype'}}[0] : 'EACH';
+%   foreach my $agtype (('EACH', 'ANY')) {
+        <div><input type="radio" name="rule<% $rule_num %>aggregtype" id="rule<% $rule_num %>aggregtype<% $agtype %>" value= "<% $agtype %>" <% ($agtype eq $val) ? 'checked' : '' %>/><label for="rule<% $rule_num %>aggregtype<% $agtype %>">Reject when <% $agtype %> field match</label></div>
+%   }
     </div>
 </&>
 

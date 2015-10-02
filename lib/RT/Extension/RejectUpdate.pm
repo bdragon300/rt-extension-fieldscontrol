@@ -138,6 +138,7 @@ sub check_ticket {
         next unless $res;
 
         my $rule_name = $rule->{'rulename'};
+        my $aggreg_type = $rule->{'aggregtype'};
         foreach my $field (@{$rule->{'fields'}}) {
             my $f = $field->{'field'};
             my $op = $field->{'op'};
@@ -156,7 +157,18 @@ sub check_ticket {
                 push @incorrect_fields, $f;
             }
         }
-        return (0, "ERROR: Restriction <$rule_name>, bad fields: [" . join(', ', @incorrect_fields) . ']') if @incorrect_fields;
+        
+        if ($aggreg_type eq 'EACH'
+            && scalar(@{$rule->{'fields'}}) == scalar(@incorrect_fields))
+        {
+            return (0, "ERROR: Restriction <$rule_name>, bad fields: [" . join(', ', @incorrect_fields) . ']');
+        }
+        if ($aggreg_type eq 'ANY'
+            && @incorrect_fields)
+        {
+            return (0, "ERROR: Restriction <$rule_name>, bad fields: [" . join(', ', @incorrect_fields) . ']');
+        }
+        
     }
     return (1, '');
 }
