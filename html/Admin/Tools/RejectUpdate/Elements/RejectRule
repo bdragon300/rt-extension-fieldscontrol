@@ -19,7 +19,7 @@
             <textarea cols="40" rows="6" name="searchsql<% $rule_num %>"><% $val %></textarea>
         </div>
         <div class="el">
-            <span class="label">REJECT IF ALL MATCH</span>
+            <span class="label">REJECT IF ANY MATCH</span>
             <div class="field-container">
 %  my $field_data = {
 %   fields => $data->{'fields'},
