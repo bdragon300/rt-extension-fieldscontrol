@@ -69,7 +69,7 @@ sub retrieve_mason_args {
     }
     foreach my $cf_abbr (grep /^CF./, keys %$fields) {
         my $cf_id = $fields->{$cf_abbr};
-        my @arg_val = grep /^Object-[:\w]+-[0-9]+-CustomField-${cf_id}-Value[^-]$/, keys %$ARGSRef;
+        my @arg_val = grep /^Object-[:\w]+-[0-9]+-CustomField-${cf_id}-Value[^-]?$/, keys %$ARGSRef;
         foreach (@arg_val) {
             $res->{$cf_abbr} = $ARGSRef->{$_};
             last;
