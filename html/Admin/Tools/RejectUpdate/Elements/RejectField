@@ -31,7 +31,11 @@
 % $val = (exists $actual_values->{'value'}) ? @{$actual_values->{'value'}}[0] : '';
     <div class="el">
         <span class="label">Value</span>
-        <input type="text" name="rule<% $rule_num %>value<% $field_num %>" value="<% $val %>" />
+        <input list="rule<% $rule_num %>datalist<% $field_num %>" type="text" name="rule<% $rule_num %>value<% $field_num %>" value="<% $val %>" />
+        <datalist id="rule<% $rule_num %>datalist<% $field_num %>">
+            <option value="(?#MandatoryRegex).">(?#MandatoryRegex).</option>
+            <option value="(?#DigitsRegex)^[\d.]+$">(?#DigitsRegex)^[\d.]+$</option>
+        </datalist>
     </div>
     <div class="el">
         <span class="label">&nbsp;</span>

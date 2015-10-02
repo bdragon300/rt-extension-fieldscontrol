@@ -67,7 +67,6 @@ sub retrieve_mason_args {
     foreach (grep /^Transaction./, keys %$fields) {
         $res->{$_} = (defined $ARGSRef->{$fields->{$_}}) ? $ARGSRef->{$fields->{$_}} : undef;
     }
-
     foreach my $cf_abbr (grep /^CF./, keys %$fields) {
         my $cf_id = $fields->{$cf_abbr};
         my @arg_val = grep /^Object-[:\w]+-[0-9]+-CustomField-${cf_id}-Value[^-]$/, keys %$ARGSRef;
@@ -157,7 +156,7 @@ sub check_ticket {
                 push @incorrect_fields, $f;
             }
         }
-        
+
         if ($aggreg_type eq 'EACH'
             && scalar(@{$rule->{'fields'}}) == scalar(@incorrect_fields))
         {
