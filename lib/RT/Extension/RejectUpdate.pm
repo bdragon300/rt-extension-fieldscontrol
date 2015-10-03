@@ -82,6 +82,7 @@ sub load_config {
     my $attrs = RT::Attributes->new( $RT::SystemUser );
     $attrs->LimitToObject($RT::System);
     $attrs->Limit(FIELD => 'Name', VALUE => 'RejectUpdateConfig');
+    $attrs->OrderBy(FIELD => 'id', ORDER => 'DESC');
 
     my $cfg = ($attrs->Count > 0) ? $attrs->First->Content : undef;
     if (ref($cfg) eq 'ARRAY') {
@@ -99,24 +100,31 @@ sub write_config {
 
     my $cfg = RT::Attributes->new( RT::SystemUser );
     $cfg->LimitToObject(RT::System);
+    $cfg->OrderBy(FIELD => 'id', ORDER => 'DESC');
     my @all_attrs = $cfg->Named('RejectUpdateConfig');
-    foreach (@all_attrs) { #FIXME: modify existing attr instead creating new one
+    my $new_cfg = shift @all_attrs if @all_attrs;
+    foreach (@all_attrs) {
         $_->Delete;
     }
-
-    if (scalar(@{$config})) {
-        my $new_cfg = RT::Attribute->new( RT::SystemUser );
+    unless ($new_cfg) {
+        $new_cfg = RT::Attribute->new( RT::SystemUser );
         my $res = $new_cfg->Create(
             Name => 'RejectUpdateConfig',
             Description => 'RT::Extension::RejectUpdate configuration',
-            Content => $config,
             ContentType => 'storable',
             Object => RT::System
         );
-        if ( ! $res ) {
+
+        unless ( $res ) {
             RT::Logger->error("[$PACKAGE]: Error while writing settings");
+            return $res;
         }
-        return $res;
+    }
+
+    if (scalar(@{$config})) {
+        $new_cfg->SetContent($config);
+    } else {
+        $new_cfg->DeleteAllSubValues;
     }
     return 0;
 }
