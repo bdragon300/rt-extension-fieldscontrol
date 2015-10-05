@@ -119,8 +119,8 @@ if ($ARGS{'reject-submit'}) {
                 next;
             }
 
-            if (exists($fields_list[$f])
-                && exists($ops[$op]))
+            if ((grep { $_ eq $f } @fields_list)
+                && (grep { $_ eq $op } @ops))
             {
                 push @rule_fields, {
                     'field' => $f,
