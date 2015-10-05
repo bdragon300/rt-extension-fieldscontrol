@@ -27,13 +27,13 @@ our $available_fields = {
     'Ticket.TimeLeft'               => 'TimeLeft',
     'Ticket.Starts'                 => 'Starts',
     'Ticket.Due'                    => 'Due',
-    'Ticket.new-DependsOn'          => 'new-DependsOn',
-    'Ticket.DependsOn-new'          => 'DependsOn-new',
-    'Ticket.new-MemberOf'           => 'new-MemberOf',
-    'Ticket.MemberOf-new'           => 'MemberOf-new',
-    'Ticket.new-RefersTo'           => 'new-RefersTo',
-    'Ticket.RefersTo-new'           => 'RefersTo-new',
-    'Transaction.Worked'            => 'UpdateTimeWorked'
+    'Transaction.Worked'            => 'UpdateTimeWorked',
+    'Transaction.Content'           => 'UpdateContent',
+    'Transaction.Subject'           => 'UpdateSubject',
+    'Transaction.One-time-CC'       => 'UpdateCc',
+    'Transaction.One-time-Bcc'      => 'UpdateBcc',
+    'Transaction.Sign'              => 'Sign',
+    'Transaction.Encrypt'           => 'Encrypt'
 };
 
 our $available_ops = {
