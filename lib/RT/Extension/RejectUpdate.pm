@@ -37,10 +37,10 @@ our $available_fields = {
 };
 
 our $available_ops = {
-    '=='    => sub { (ref($_[0]) eq 'ARRAY') ? grep(/^$_[1]$/, @{$_[0]}) : ($_[0] eq $_[1]); },
-    '!='    => sub { (ref($_[0]) eq 'ARRAY') ? grep(!/^$_[1]$/, @{$_[0]}) : ($_[0] ne $_[1]); },
-    '=~'    => sub { (ref($_[0]) eq 'ARRAY') ? grep(/$_[1]/, @{$_[0]}) : ($_[0] =~ /$_[1]/); },
-    '!~'    => sub { (ref($_[0]) eq 'ARRAY') ? grep(!/$_[1]/, @{$_[0]}) : ($_[0] !~ /$_[1]/); },
+    'equal'    => sub { (ref($_[0]) eq 'ARRAY') ? grep(/^$_[1]$/, @{$_[0]}) : ($_[0] eq $_[1]); },
+    'not equal'    => sub { (ref($_[0]) eq 'ARRAY') ? grep(!/^$_[1]$/, @{$_[0]}) : ($_[0] ne $_[1]); },
+    'match regex'    => sub { (ref($_[0]) eq 'ARRAY') ? grep(/$_[1]/, @{$_[0]}) : ($_[0] =~ /$_[1]/); },
+    'not match regex'    => sub { (ref($_[0]) eq 'ARRAY') ? grep(!/$_[1]/, @{$_[0]}) : ($_[0] !~ /$_[1]/); },
 };
 
 sub get_fields_list {
