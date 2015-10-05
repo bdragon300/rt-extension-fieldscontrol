@@ -5,7 +5,7 @@ if ( $session{'CurrentUser'}->HasRight( Right => 'ShowConfigTab', Object => RT->
     my $tools_menu = $admin_menu->child('tools') if $admin_menu;
     if ($tools_menu) {
         $tools_menu->child(reject_update => 
-            title       => loc('Ticket reject'),
+            title       => loc('Reject Update'),
             description => loc('Configure ticket rejection'),
             path        => '/Admin/Tools/RejectUpdate',
         );
