@@ -16,15 +16,12 @@
     .field-container .field div.el{
         margin: 0;
     }
-    .reject-new-rule {
-        display: none !important;
-    }
 </style>
 % my $rule_data = {
 %   fields => \@fields_list,
 %   operations => \@ops
 % };
-<div class="reject-new-rule">
+<div id="reject-new-rule" style="display: none">
     <& Elements/RejectRule, dummy => 1, data => $rule_data &>
 </div>
 <form action="/Admin/Tools/RejectUpdate" method="post">
@@ -48,24 +45,24 @@
 
 <script type="text/javascript">
     function add_field(e) {
-        rule_num = jQuery("#reject-rules input.rule-num").index(jQuery(e.target).parent().parent().parent().find('input.rule-num'));
-
-        field_container = jQuery(e.target).parent().siblings(".field-container");
+        reject_rule = jQuery(e.target).parents("#reject-rules > .reject-rule");
+        rule_count = jQuery("#reject-rules > .reject-rule").index(reject_rule);
+        field_container = reject_rule.find(".field-container");
         fields_count = field_container.find(".field").size();
-        str = jQuery(".reject-new-rule .field-container").html().replace(/%d/g, rule_num + 1).replace(/%e/g, fields_count + 1);
 
+        str = jQuery("#reject-new-rule .field-container").html().replace(/%d/g, rule_count + 1).replace(/%e/g, fields_count + 1);
         field_container.append(str);
     }
 
     jQuery("#reject-add-rule").click(function() {
         rules_count = jQuery("#reject-rules > .reject-rule").size();
-        str = jQuery(".reject-new-rule").html().replace(/%d/g, rules_count + 1).replace(/%e/g, "1");
+        str = jQuery("#reject-new-rule").html().replace(/%d/g, rules_count + 1).replace(/%e/g, "1");
 
         inserted = jQuery("#reject-rules").append(str);
         jQuery(".reject-add-field").last().click(add_field);
     });
 
-    jQuery(".reject-add-field").click(add_field);4
+    jQuery(".reject-add-field").click(add_field);
 </script>
 
 <%init>
@@ -98,11 +95,11 @@ if ($ARGS{'reject-submit'}) {
         # Check whether SQL correct
         foreach my $key (('searchsql')) {
             my $val = $ARGS{$key . $i};
-            push @results, "Empty ${key} in rule ${i}" unless $val;
+            push @results, "ERROR: Empty ${key} in rule ${i}" unless $val;
             my ($res, $msg) = $tickets->FromSQL($val);
 
             unless ($res) {
-                push @results, "Unable to parse ${key} rule ${i}: " . $msg;
+                push @results, "ERROR: Unable to parse ${key} rule ${i}: " . $msg;
             }
             $item{$key} = $val;
         }
@@ -128,7 +125,7 @@ if ($ARGS{'reject-submit'}) {
                     'value' => $val
                 };
             } else {
-                push @results, "Incorrect field spec, rule ${i} field ${j}";
+                push @results, "ERROR: Incorrect field spec, rule ${i} field ${j}";
             }
             $j++;
         }
@@ -136,10 +133,10 @@ if ($ARGS{'reject-submit'}) {
         if (@rule_fields) {
             $item{'fields'} = [@rule_fields];
         } else {
-            push @results, "Fields are not set, rule ${i}";
+            push @results, "ERROR: Fields are not set, rule ${i}";
         }
 
-        push @results, "Empty name, rule ${i}" unless ($ARGS{'rulename' . $i});
+        push @results, "ERROR: Empty name, rule ${i}" unless ($ARGS{'rulename' . $i});
         $item{'rulename'} = $ARGS{'rulename' . $i};
 
         my $aggreg_type = $ARGS{'rule' . $i . 'aggregtype'};
@@ -148,7 +145,7 @@ if ($ARGS{'reject-submit'}) {
         {
             $item{'aggregtype'} = $aggreg_type;
         } else {
-            push @results, "Aggregation type is incorrect, rule ${i}";
+            push @results, "ERROR: Aggregation type is incorrect, rule ${i}";
         }
 
         push @items, {%item};

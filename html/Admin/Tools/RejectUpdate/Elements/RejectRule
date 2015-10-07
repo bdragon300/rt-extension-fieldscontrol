@@ -19,7 +19,14 @@
             <textarea cols="40" rows="6" name="searchsql<% $rule_num %>"><% $val %></textarea>
         </div>
         <div class="el">
-            <div class="field-container">
+            <fieldset>
+                <legend>
+%   $val = (exists $actual_values->{'aggregtype'}) ? @{$actual_values->{'aggregtype'}}[0] : 'EACH';
+%   foreach my $agtype (('EACH', 'ANY')) {
+        <div><input type="radio" name="rule<% $rule_num %>aggregtype" id="rule<% $rule_num %>aggregtype<% $agtype %>" value= "<% $agtype %>" <% ($agtype eq $val) ? 'checked' : '' %>/><label for="rule<% $rule_num %>aggregtype<% $agtype %>">Reject if <% $agtype %> condition is true </label></div>
+%   }
+                </legend>
+                <div class="field-container">
 %  my $field_data = {
 %   fields => $data->{'fields'},
 %   operations => $data->{'operations'}
@@ -40,18 +47,13 @@
 %  } elsif (scalar(@$fields) == 0) {
 <& RejectField, rule_num => $rule_num, data => $field_data &>
 %  }
-            </div>
+                </div>
+            </fieldset>
             <div class="elgrp">
                 <input class="reject-add-field button" type="button" value="Add field" id="add-field<% $rule_num %>" />
             </div>
         </div>
         <input type="hidden" class="rule-num" name="rule<% $rule_num %>" />
-    </div>
-    <div class="elgrp">
-%   $val = (exists $actual_values->{'aggregtype'}) ? @{$actual_values->{'aggregtype'}}[0] : 'EACH';
-%   foreach my $agtype (('EACH', 'ANY')) {
-        <div><input type="radio" name="rule<% $rule_num %>aggregtype" id="rule<% $rule_num %>aggregtype<% $agtype %>" value= "<% $agtype %>" <% ($agtype eq $val) ? 'checked' : '' %>/><label for="rule<% $rule_num %>aggregtype<% $agtype %>">Reject when <% $agtype %> field match</label></div>
-%   }
     </div>
 </&>
 
