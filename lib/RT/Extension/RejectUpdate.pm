@@ -36,11 +36,17 @@ our $available_fields = {
     'Transaction.Encrypt'           => 'Encrypt'
 };
 
+# Empty value in ARGS in that fields means that user did not touch them
+our $empty_is_unchanged_fields = {
+    'Ticket.Owner'                  => 'Owner',
+    'Ticket.Status'                 => 'Status'
+};
+
 our $available_ops = {
-    'equal'    => sub { (ref($_[0]) eq 'ARRAY') ? grep(/^$_[1]$/, @{$_[0]}) : ($_[0] eq $_[1]); },
-    'not equal'    => sub { (ref($_[0]) eq 'ARRAY') ? grep(!/^$_[1]$/, @{$_[0]}) : ($_[0] ne $_[1]); },
-    'match regex'    => sub { (ref($_[0]) eq 'ARRAY') ? grep(/$_[1]/, @{$_[0]}) : ($_[0] =~ /$_[1]/); },
-    'not match regex'    => sub { (ref($_[0]) eq 'ARRAY') ? grep(!/$_[1]/, @{$_[0]}) : ($_[0] !~ /$_[1]/); },
+    'equal'             => sub { (ref($_[0]) eq 'ARRAY') ? grep(/^$_[1]$/, @{$_[0]}) : ($_[0] eq $_[1]); },
+    'not equal'         => sub { (ref($_[0]) eq 'ARRAY') ? grep(!/^$_[1]$/, @{$_[0]}) : ($_[0] ne $_[1]); },
+    'match regex'       => sub { (ref($_[0]) eq 'ARRAY') ? grep(/$_[1]/, @{$_[0]}) : ($_[0] =~ /$_[1]/); },
+    'not match regex'   => sub { (ref($_[0]) eq 'ARRAY') ? grep(!/$_[1]/, @{$_[0]}) : ($_[0] !~ /$_[1]/); },
 };
 
 sub get_fields_list {
@@ -56,13 +62,27 @@ sub get_fields_list {
 }
 
 sub retrieve_mason_args {
+    # Returns $available_fields with filled values that sended by user
+    # Not passed arguments will be undef
+
     my $ARGSRef = shift;
+    my $ticket = shift;
 
     my $res = {};
     my $fields = get_fields_list;
     foreach (grep /^Ticket./, keys %$fields) {
         $res->{$_} = (defined $ARGSRef->{$fields->{$_}}) ? $ARGSRef->{$fields->{$_}} : undef;
+        if (exists($empty_is_unchanged_fields->{$_})
+            && defined($res->{$_})
+            && ($res->{$_} eq ''))
+        {
+            $res->{$_} = $ticket->_Value($empty_is_unchanged_fields->{$_});
+        }
     }
+
+    # Special check for Owner
+    # RT::Nobody means empty value
+    $res->{'Ticket.Owner'} = '' if ($res->{'Ticket.Owner'} eq RT::Nobody->id);
 
     foreach (grep /^Transaction./, keys %$fields) {
         $res->{$_} = (defined $ARGSRef->{$fields->{$_}}) ? $ARGSRef->{$fields->{$_}} : undef;
@@ -137,7 +157,8 @@ sub check_ticket {
 
     my $config = load_config;
     return (1, '') unless $config; #No rules or error
-    my $values = retrieve_mason_args($ARGSRef);
+    my $values = retrieve_mason_args($ARGSRef, $ticket);
+
     my @incorrect_fields = ();
 
     foreach my $rule (@{$config}) {
