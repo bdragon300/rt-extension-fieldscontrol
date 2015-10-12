@@ -62,7 +62,7 @@ sub get_fields_list {
     return $res;
 }
 
-sub retrieve_mason_args {
+sub fill_fields {
     # Returns $available_fields with filled values that sended by user
     # Not passed arguments will be undef
 
@@ -158,7 +158,7 @@ sub check_ticket {
 
     my $config = load_config;
     return (1, '') unless $config; #No rules or error
-    my $values = retrieve_mason_args($ARGSRef, $ticket);
+    my $values = fill_fields($ARGSRef, $ticket);
 
     my @incorrect_fields = ();
 
