@@ -27,6 +27,7 @@ our $available_fields = {
     'Ticket.TimeLeft'               => 'TimeLeft',
     'Ticket.Starts'                 => 'Starts',
     'Ticket.Due'                    => 'Due',
+    'Transaction.MessageType'       => 'UpdateType',
     'Transaction.Worked'            => 'UpdateTimeWorked',
     'Transaction.Content'           => 'UpdateContent',
     'Transaction.Subject'           => 'UpdateSubject',
