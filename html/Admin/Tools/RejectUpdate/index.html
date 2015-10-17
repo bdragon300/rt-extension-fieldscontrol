@@ -63,7 +63,7 @@
         fields_count = field_container.find(".field").size();
         field_type = e.data.field_type;
 
-        str = jQuery("#reject-new-rule .field-container")
+        str = jQuery("#reject-new-field")
                 .html()
                 .replace(/%d/g, rule_index + 1)
                 .replace(/%e/g, fields_count + 1)
@@ -78,6 +78,8 @@
         inserted = jQuery("#reject-rules").append(str);
         jQuery(".add-rfield").last().click({field_type: "rfields"}, add_field);
         jQuery(".add-sfield").last().click({field_type: "sfields"}, add_field);
+
+        jQuery(".add-rfield").click();
     });
 
     jQuery(".add-sfield").click({field_type: "sfields"}, add_field);

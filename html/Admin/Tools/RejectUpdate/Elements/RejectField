@@ -58,5 +58,5 @@ $actual_values => {}
 $dummy => 0
 $rule_num => 1
 $field_num => 1
-$field_type => 'rfields'
+$field_type => ''
 </%args>
