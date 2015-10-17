@@ -6,9 +6,9 @@ $results => []
 </%args>
 
 <%init>
-my ($res, $msg) = RT::Extension::RejectUpdate::check_ticket($TicketObj, $ARGSRef);
-unless($res) {
+my $errors = RT::Extension::RejectUpdate::check_ticket($TicketObj, $ARGSRef);
+if (@$errors) {
 	$$skip_update = 1;
-	push @$results, $msg if $msg;
+	push @$results, @$errors;
 }
 </%init>

@@ -162,13 +162,13 @@ sub write_config {
 }
 
 sub check_ticket {
-    # Returns (0|1, 'error message')
 
     my $ticket = shift;
     my $ARGSRef = shift;
+    my $errors = [];
 
     my $config = load_config;
-    return (1, '') unless $config; #No rules or error
+    return $errors unless $config; # No rules
     my $values = fill_fields($ARGSRef, $ticket);
 
     foreach my $rule (@{$config}) {
@@ -194,12 +194,12 @@ sub check_ticket {
 
         my $rule_name = $rule->{'rulename'};
         if ($aggreg_res == 1) {
-            return (0, "ERROR: Restriction <$rule_name>, bad fields: [" 
+            push(@$errors, "ERROR: Restriction <$rule_name>, bad fields: [" 
                 . join(', ', @{$matches->{'match'}}) 
                 . ']');
         }
     }
-    return (1, '');
+    return $errors;
 }
 
 sub check_txn_fields {
