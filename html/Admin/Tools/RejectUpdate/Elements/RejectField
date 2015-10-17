@@ -4,7 +4,7 @@
 <div class="elgrp field">
     <div class="el">
         <span class="label">Field</span>
-        <select name="rule<% $rule_num %>field<% $field_num %>">
+        <select name="<% join('-', ('rule', $rule_num, $field_type, $field_num, 'name')) %>">
             <option></option>
 % $d = (exists $data->{'fields'}) ? $data->{'fields'} : [];
 % $val = (exists $actual_values->{'field'}) ? @{$actual_values->{'field'}}[0] : '';
@@ -19,7 +19,7 @@
 % $val = (exists $actual_values->{'op'}) ? @{$actual_values->{'op'}}[0] : '';
     <div class="el">
         <span class="label">Operation</span>
-        <select name="rule<% $rule_num %>op<% $field_num %>">
+        <select name="<% join('-', ('rule', $rule_num, $field_type, $field_num, 'op')) %>">
             <option></option>
 % foreach my $i (@$d) {
             <option value="<% $i %>" <% ($val eq $i) ? 'selected' : '' %>><% $i %></option>
@@ -30,16 +30,16 @@
 % # Value
 % $val = (exists $actual_values->{'value'}) ? @{$actual_values->{'value'}}[0] : '';
     <div class="el">
-        <span class="label">Value</span>
-        <input list="rule<% $rule_num %>datalist<% $field_num %>" type="text" name="rule<% $rule_num %>value<% $field_num %>" value="<% $val %>" />
-        <datalist id="rule<% $rule_num %>datalist<% $field_num %>">
+        <span class="label">NEW value</span>
+        <input list="<% join('-', ('rule', $rule_num, $field_type, $field_num, 'datalist')) %>" type="text" name="<% join('-', ('rule', $rule_num, $field_type, $field_num, 'value')) %>" value="<% $val %>" />
+        <datalist id="<% join('-', ('rule', $rule_num, $field_type, $field_num, 'datalist')) %>">
             <option value="(?#MandatoryRegex).">(?#MandatoryRegex).</option>
             <option value="(?#DigitsRegex)^[\d.]+$">(?#DigitsRegex)^[\d.]+$</option>
         </datalist>
     </div>
     <div class="el">
         <span class="label">&nbsp;</span>
-        <input id="rule<% $rule_num %>deletefield<% $field_num %>" name="rule<% $rule_num %>deletefield<% $field_num %>" class="checkbox" type="checkbox"><label for="rule<% $rule_num %>deletefield<% $field_num %>">DELETE FIELD?</label>
+        <input id="<% join('-', ('rule', $rule_num, $field_type, $field_num, 'delete')) %>" name="<% join('-', ('rule', $rule_num, $field_type, $field_num, 'delete')) %>" class="checkbox" type="checkbox"><label for="<% join('-', ('rule', $rule_num, $field_type, $field_num, 'delete')) %>"><% ($dummy) ? 'IGNORE NEW FIELD?' : 'DELETE FIELD?' %></label>
     </div>
 </div>
 
@@ -48,6 +48,7 @@ if ($dummy)
 {
 	$rule_num = '%d';
 	$field_num = '%e';
+    $field_type = '%f';
 }
 </%init>
 
@@ -57,4 +58,5 @@ $actual_values => {}
 $dummy => 0
 $rule_num => 1
 $field_num => 1
+$field_type => 'rfields'
 </%args>

@@ -44,10 +44,20 @@ our $empty_is_unchanged_fields = {
 };
 
 our $available_ops = {
-    'equal'             => sub { (ref($_[0]) eq 'ARRAY') ? grep(/^$_[1]$/, @{$_[0]}) : int($_[0] eq $_[1]); },
-    'not equal'         => sub { (ref($_[0]) eq 'ARRAY') ? grep(!/^$_[1]$/, @{$_[0]}) : int($_[0] ne $_[1]); },
-    'match regex'       => sub { (ref($_[0]) eq 'ARRAY') ? grep(/$_[1]/, @{$_[0]}) : ($_[0] =~ /$_[1]/); },
-    'not match regex'   => sub { (ref($_[0]) eq 'ARRAY') ? grep(!/$_[1]/, @{$_[0]}) : ($_[0] !~ /$_[1]/); },
+    'equal'             => sub { (ref($_[0]) eq 'ARRAY') ? int(grep(/^$_[1]$/, @{$_[0]}))  : int($_[0] eq $_[1]); },
+    'not equal'         => sub { (ref($_[0]) eq 'ARRAY') ? int(grep(!/^$_[1]$/, @{$_[0]})) : int($_[0] ne $_[1]); },
+    'match regex'       => sub { (ref($_[0]) eq 'ARRAY') ? int(grep(/$_[1]/, @{$_[0]})) : int($_[0] =~ /$_[1]/); },
+    'not match regex'   => sub { (ref($_[0]) eq 'ARRAY') ? int(grep(!/$_[1]/, @{$_[0]})) : int($_[0] !~ /$_[1]/); },
+};
+
+# 'Config value' => 'Display text'
+our $aggreg_types = {
+    'AND' => sub { 
+        int( !! @{$_[0]->{'match'}} && ! @{$_[0]->{'mismatch'}});
+    },
+    'OR'  => sub { 
+        int( !! @{$_[0]->{'match'}});
+    }
 };
 
 sub get_fields_list {
@@ -117,7 +127,8 @@ sub load_config {
 sub write_config {
     my $config = shift;
 
-    die "config is not array" if (ref $config ne 'ARRAY');
+    die "INTERNAL ERROR: [$PACKAGE]: saving config is not array. Something wrong in index.html"
+        if (ref $config ne 'ARRAY');
 
     my $cfg = RT::Attributes->new( RT::SystemUser );
     $cfg->LimitToObject(RT::System);
@@ -160,46 +171,73 @@ sub check_ticket {
     return (1, '') unless $config; #No rules or error
     my $values = fill_fields($ARGSRef, $ticket);
 
-    my @incorrect_fields = ();
-
     foreach my $rule (@{$config}) {
         my $res = find_ticket($ticket, $rule->{'searchsql'});
         next unless $res;
 
+        my $sf_aggreg_type = $rule->{'sfieldsaggreg'};
+        my $rf_aggreg_type = $rule->{'rfieldsaggreg'};
+
+        my $matches = check_txn_fields($values, $rule->{'sfields'});
+
+        die "INTERNAL ERROR: [$PACKAGE] incorrect config in database. Reconfigure please." 
+            unless exists($aggreg_types->{$sf_aggreg_type});
+        my $aggreg_res = $aggreg_types->{$sf_aggreg_type}->($matches);
+
+        next if ($aggreg_res == 0 && scalar(@{$rule->{'sfields'}}) > 0); # Apply if no sfields
+
+        $matches = check_txn_fields($values, $rule->{'rfields'});
+
+        die "INTERNAL ERROR: [$PACKAGE] incorrect config in database. Reconfigure please." 
+            unless exists($aggreg_types->{$sf_aggreg_type});
+        $aggreg_res = $aggreg_types->{$rf_aggreg_type}->($matches);
+
         my $rule_name = $rule->{'rulename'};
-        my $aggreg_type = $rule->{'aggregtype'};
-        foreach my $field (@{$rule->{'fields'}}) {
-            my $f = $field->{'field'};
-            my $op = $field->{'op'};
-            my $conf_value = $field->{'value'};
-
-            unless (defined $available_ops->{$op}) 
-            {
-                return (0, 'ERROR: Incorrect config: rule ' . $rule_name . ' field ' . $f);
-            }
-
-            my $new_value = $values->{$f};
-            next unless defined $new_value;
-
-            my $op_res = $available_ops->{$op}($new_value, $conf_value);
-            if ($op_res) {
-                push @incorrect_fields, $f;
-            }
+        if ($aggreg_res == 1) {
+            return (0, "ERROR: Restriction <$rule_name>, bad fields: [" 
+                . join(', ', @{$matches->{'match'}}) 
+                . ']');
         }
-
-        if ($aggreg_type eq 'EACH'
-            && scalar(@{$rule->{'fields'}}) == scalar(@incorrect_fields))
-        {
-            return (0, "ERROR: Restriction <$rule_name>, bad fields: [" . join(', ', @incorrect_fields) . ']');
-        }
-        if ($aggreg_type eq 'ANY'
-            && @incorrect_fields)
-        {
-            return (0, "ERROR: Restriction <$rule_name>, bad fields: [" . join(', ', @incorrect_fields) . ']');
-        }
-        
     }
     return (1, '');
+}
+
+sub check_txn_fields {
+    my $txn_fields = shift;
+    my $conf_fields = shift;
+
+    my $res = {
+        'match' => [],
+        'mismatch' => [],
+        'undef' => []
+    };
+
+    foreach my $field (@$conf_fields) {
+        my $f = $field->{'field'};
+        my $op = $field->{'op'};
+        my $conf_value = $field->{'value'};
+
+        unless (defined $available_ops->{$op}) 
+        {
+            die "INTERNAL ERROR: [$PACKAGE] incorrect config in database. Reconfigure please.";
+        }
+
+        my $new_value = $txn_fields->{$f};
+        # next unless defined $new_value;
+
+        unless (defined $new_value) {
+            push @{$res->{'undef'}}, $f;
+            next;
+        }
+        my $op_res = $available_ops->{$op}($new_value, $conf_value);
+        if ($op_res) {
+            push @{$res->{'match'}}, $f;
+        } else {
+            push @{$res->{'mismatch'}}, $f;
+        }
+    }
+
+    return $res;
 }
 
 sub find_ticket {

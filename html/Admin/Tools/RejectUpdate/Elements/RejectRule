@@ -1,59 +1,95 @@
 % my $val;
+%  my $field_data = {
+%   fields => $data->{'fields'},
+%   operations => $data->{'operations'}
+%  };
+%
 <&| /Widgets/TitleBox,title => 'Rule ' . $rule_num, class=>'reject-rule', 'rolledup'=>0 &>
     <div class="elgrp">
         <div class="el">
             <span class="label">Rule name</span>
 %   $val = (exists $actual_values->{'rulename'}) ? @{$actual_values->{'rulename'}}[0] : '';
-            <input type="text" name="rulename<% $rule_num %>" value="<% $val %>" />
+            <input type="text" name="<% join('-', ('rule', $rule_num, 'name')) %>" value="<% $val %>" />
         </div>
         <div class="el">
             <span class="label">&nbsp;</span>
-            <input id="ruledelete<% $rule_num %>" name="ruledelete<% $rule_num %>" class="checkbox" type="checkbox">
-            <label for="ruledelete<% $rule_num %>">DELETE?</label>
+            <input id="<% join('-', ('rule', $rule_num, 'delete')) %>" name="<% join('-', ('rule', $rule_num, 'delete')) %>" class="checkbox" type="checkbox">
+            <label for="<% join('-', ('rule', $rule_num, 'delete')) %>"><% ($dummy) ? 'IGNORE?' : 'DELETE?' %></label>
         </div>
     </div>
     <div class="elgrp">
         <div class="el">
-            <span class="label">Apply to tickets</span>
-%   $val = (exists $actual_values->{'searchsql'}) ? @{$actual_values->{'searchsql'}}[0] : '';
-            <textarea cols="40" rows="6" name="searchsql<% $rule_num %>"><% $val %></textarea>
-        </div>
-        <div class="el">
             <fieldset>
-                <legend>
-%   $val = (exists $actual_values->{'aggregtype'}) ? @{$actual_values->{'aggregtype'}}[0] : 'EACH';
-%   foreach my $agtype (('EACH', 'ANY')) {
-        <div><input type="radio" name="rule<% $rule_num %>aggregtype" id="rule<% $rule_num %>aggregtype<% $agtype %>" value= "<% $agtype %>" <% ($agtype eq $val) ? 'checked' : '' %>/><label for="rule<% $rule_num %>aggregtype<% $agtype %>">Reject if <% $agtype %> condition is true </label></div>
+                <legend>Apply for tickets ...</legend>
+            <div class="el">
+%   $val = (exists $actual_values->{'searchsql'}) ? @{$actual_values->{'searchsql'}}[0] : '';
+                <textarea cols="40" rows="6" name="<% join('-', ('rule', $rule_num, 'searchsql')) %>" placeholder="Ticket SQL"><% $val %></textarea>
+            </div>
+            </fieldset>
+        </div>
+        <div class="el sfields-list field-list">
+            <fieldset>
+               <legend>... AND IF values on the page are ...</legend>
+               <div>
+%   $val = (exists $actual_values->{'sfieldsaggreg'}) ? @{$actual_values->{'sfieldsaggreg'}}[0] : (keys %$aggreg_types)[0];
+%   foreach my $agtype (sort keys %$aggreg_types) {
+        <div><input type="radio" name="<% join('-', ('rule', $rule_num, 'sfields', 'aggreg')) %>" id="<% join('-', ('rule', $rule_num, 'sfields', 'aggreg', $agtype)) %>" value= "<% $agtype %>" <% ($agtype eq $val) ? 'checked' : '' %>/><label for="<% join('-', ('rule', $rule_num, 'sfields' ,'aggreg', $agtype)) %>"><% $agtype %></label></div>
 %   }
-                </legend>
+                </div>
                 <div class="field-container">
-%  my $field_data = {
-%   fields => $data->{'fields'},
-%   operations => $data->{'operations'}
-%  };
+
 %   my $field_num = 1;
-%   my $fields = (exists $actual_values->{'fields'}) ? $actual_values->{'fields'} : [];
+%   my $fields = (exists $actual_values->{'sfields'}) ? $actual_values->{'sfields'} : [];
 %   foreach my $config_field (@$fields) {
 %       my $field_actual_values = {
 %           field => [$config_field->{'field'}],
 %           op => [$config_field->{'op'}],
 %           value => [$config_field->{'value'}]
 %       };
-<& RejectField, field_num => $field_num, rule_num => $rule_num, data => $field_data, actual_values => $field_actual_values &>
+<& RejectField, field_num => $field_num, rule_num => $rule_num, data => $field_data, actual_values => $field_actual_values, field_type => 'sfields' &>
+%       $field_num++;
+%   }
+                </div>
+                <div class="elgrp">
+                    <input class="add-sfield button" type="button" value="Add condition" id="<% join('-', ('rule', $rule_num, 'add', 'sfields')) %>" />
+                </div>
+            </fieldset>
+        </div>
+    </div>
+    <div class="elgrp">
+        <div class="el rfields-list field-list">
+            <!-- <legend>...then reject update when:</legend> -->
+            <fieldset>
+                <legend>... THEN REJECT IF values on the page are </legend>
+%   $val = (exists $actual_values->{'rfieldsaggreg'}) ? @{$actual_values->{'rfieldsaggreg'}}[0] : (keys %$aggreg_types)[0];
+%   foreach my $agtype (sort keys %$aggreg_types) {
+        <div><input type="radio" name="<% join('-', ('rule', $rule_num, 'rfields', 'aggreg')) %>" id="<% join('-', ('rule', $rule_num, 'rfields', 'aggreg', $agtype)) %>" value= "<% $agtype %>" <% ($agtype eq $val) ? 'checked' : '' %> /><label for="<% join('-', ('rule', $rule_num, 'rfields', 'aggreg', $agtype)) %>"><% $agtype %></label></div>
+%   }
+                </legend>
+                <div class="field-container">
+%   $field_num = 1;
+%   $fields = (exists $actual_values->{'rfields'}) ? $actual_values->{'rfields'} : [];
+%   foreach my $config_field (@$fields) {
+%       my $field_actual_values = {
+%           field => [$config_field->{'field'}],
+%           op => [$config_field->{'op'}],
+%           value => [$config_field->{'value'}]
+%       };
+<& RejectField, field_num => $field_num, rule_num => $rule_num, data => $field_data, actual_values => $field_actual_values, field_type => 'rfields' &>
 %       $field_num++;
 %   }
 %  if ($dummy) {
-<& RejectField, dummy => 1, data => $field_data &>
+<& RejectField, dummy => 1, data => $field_data, field_type => 'rfields' &>
 %  } elsif (scalar(@$fields) == 0) {
-<& RejectField, rule_num => $rule_num, data => $field_data &>
+<& RejectField, rule_num => $rule_num, data => $field_data, field_type => 'rfields' &>
 %  }
                 </div>
+                <div class="elgrp">
+                    <input class="add-rfield button" type="button" value="Add field" id="<% join('-', ('rule', $rule_num, 'add', 'rfields')) %>" />
+                </div>
             </fieldset>
-            <div class="elgrp">
-                <input class="reject-add-field button" type="button" value="Add field" id="add-field<% $rule_num %>" />
-            </div>
         </div>
-        <input type="hidden" class="rule-num" name="rule<% $rule_num %>" />
+        <input type="hidden" class="rule-num" name="<% join('-', ('rule', $rule_num)) %>" />
     </div>
 </&>
 
@@ -69,4 +105,5 @@ $data => {}
 $actual_values => {}
 $rule_num => 1
 $dummy => 0
+$aggreg_types => []
 </%args>
