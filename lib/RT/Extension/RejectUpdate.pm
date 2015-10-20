@@ -5,6 +5,7 @@ use strict;
 use warnings;
 use RT::Tickets;
 use RT::Attributes;
+use RT::CustomField;
 use Data::Dumper qw(Dumper);
 
 our $VERSION = '0.1';
@@ -68,17 +69,49 @@ sub get_fields_list {
     return $res;
 }
 
-sub fill_fields {
-    # Returns $available_fields with filled values that sended by user
-    # Not passed arguments will be undef
-
-    my $ARGSRef = shift;
+sub fill_ticket_fields {
+    my $fields = shift;
     my $ticket = shift;
 
     my $res = {};
-    my $fields = get_fields_list;
+    foreach my $f (grep /^Ticket./, keys %$fields) {
+        my ($fld) = $f =~ /Ticket.(.*)/;
+        $res->{$f} = $ticket->_Value($fld);
+    }
+    my $cfs = $ticket->CustomFields;
+    while (my $cf = $cfs->Next) {
+        my $cf_name = 'CF.' . $cf->Name;
+        next unless exists $fields->{$cf_name};
+
+        my $vals = $cf->ValuesForObject($ticket);
+        if ($vals->Count == 0) {
+            $res->{$cf_name} = '';
+        } elsif ($vals->Count == 1) {
+            $res->{$cf_name} = $vals->First->Content;
+        } else {
+            my @val = ();
+            while (my $v = $vals->Next) {
+                push @val, $v->Content;
+            }
+            $res->{$cf_name} = [@val];
+        }
+    }
+    return $res;
+}
+
+sub fill_txn_fields {
+    # Returns $available_fields with filled values that sended by user
+    # Not passed arguments will be undef
+
+    my $fields = shift;
+    my $ticket = shift;
+    my $ARGSRef = shift;
+
+    my $res = {};
     foreach (grep /^Ticket./, keys %$fields) {
-        $res->{$_} = (defined $ARGSRef->{$fields->{$_}}) ? $ARGSRef->{$fields->{$_}} : undef;
+        $res->{$_} = $ARGSRef->{$fields->{$_}} if (defined $ARGSRef->{$fields->{$_}});
+
+        # If empty then retrieve it from TicketObj
         if (exists($empty_is_unchanged_fields->{$_})
             && defined($res->{$_})
             && ($res->{$_} eq ''))
@@ -92,15 +125,12 @@ sub fill_fields {
     $res->{'Ticket.Owner'} = '' if ($res->{'Ticket.Owner'} eq RT::Nobody->id);
 
     foreach (grep /^Transaction./, keys %$fields) {
-        $res->{$_} = (defined $ARGSRef->{$fields->{$_}}) ? $ARGSRef->{$fields->{$_}} : undef;
+        $res->{$_} = $ARGSRef->{$fields->{$_}} if (defined $ARGSRef->{$fields->{$_}});
     }
     foreach my $cf_abbr (grep /^CF./, keys %$fields) {
         my $cf_id = $fields->{$cf_abbr};
         my @arg_val = grep /^Object-[:\w]+-[0-9]+-CustomField-${cf_id}-Value[^-]?$/, keys %$ARGSRef;
-        foreach (@arg_val) {
-            $res->{$cf_abbr} = $ARGSRef->{$_};
-            last;
-        }
+        $res->{$cf_abbr} = $ARGSRef->{$arg_val[0]} if (@arg_val);
     }
     return $res;
 }
@@ -165,7 +195,10 @@ sub check_ticket {
 
     my $config = load_config;
     return $errors unless $config; # No rules
-    my $values = fill_fields($ARGSRef, $ticket);
+
+    my $fields = get_fields_list;
+    my $txn_values = fill_txn_fields($fields, $ticket, $ARGSRef);
+    my $ticket_values = fill_ticket_fields($fields, $ticket);
 
     foreach my $rule (@{$config}) {
         my $res = find_ticket($ticket, $rule->{'searchsql'});
@@ -174,15 +207,16 @@ sub check_ticket {
         my $sf_aggreg_type = $rule->{'sfieldsaggreg'};
         my $rf_aggreg_type = $rule->{'rfieldsaggreg'};
 
-        my $matches = check_txn_fields($values, $rule->{'sfields'});
+        my $matches = check_txn_fields($txn_values, $rule->{'sfields'});
 
         die "INTERNAL ERROR: [$PACKAGE] incorrect config in database. Reconfigure please." 
             unless exists($aggreg_types->{$sf_aggreg_type});
         my $aggreg_res = $aggreg_types->{$sf_aggreg_type}->($matches);
 
-        next if ($aggreg_res == 0 && scalar(@{$rule->{'sfields'}}) > 0); # Apply if no sfields
+        next if ($aggreg_res == 0 && scalar(@{$rule->{'sfields'}}) > 0); # Apply rule if no sfields
 
-        $matches = check_txn_fields($values, $rule->{'rfields'});
+        my $rvalues = {%$ticket_values, %$txn_values};
+        $matches = check_txn_fields($rvalues, $rule->{'rfields'});
 
         die "INTERNAL ERROR: [$PACKAGE] incorrect config in database. Reconfigure please." 
             unless exists($aggreg_types->{$sf_aggreg_type});

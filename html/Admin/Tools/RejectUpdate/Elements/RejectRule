@@ -25,7 +25,7 @@
     <div class="elgrp">
         <div class="el">
             <fieldset>
-                <legend>Apply for tickets ...</legend>
+                <legend>Apply for tickets</legend>
             <div class="el">
 %   $val = (exists $actual_values->{'searchsql'}) ? @{$actual_values->{'searchsql'}}[0] : '';
                 <textarea cols="40" rows="6" name="<% join('-', ('rule', $rule_num, 'searchsql')) %>" placeholder="Ticket SQL"><% $val %></textarea>
@@ -34,11 +34,14 @@
         </div>
         <div class="el sfields-list field-list">
             <fieldset>
-               <legend>... AND IF values on the page are ...</legend>
-               <div>
+               <legend>Additional filter</legend>
+               <div class="ctlgrp">
 %   $val = (exists $actual_values->{'sfieldsaggreg'}) ? @{$actual_values->{'sfieldsaggreg'}}[0] : (keys %$aggreg_types)[0];
 %   foreach my $agtype (sort keys %$aggreg_types) {
-        <div><input type="radio" name="<% join('-', ('rule', $rule_num, 'sfields', 'aggreg')) %>" id="<% join('-', ('rule', $rule_num, 'sfields', 'aggreg', $agtype)) %>" value= "<% $agtype %>" <% ($agtype eq $val) ? 'checked' : '' %>/><label for="<% join('-', ('rule', $rule_num, 'sfields' ,'aggreg', $agtype)) %>"><% $agtype %></label></div>
+                    <div>
+                        <input type="radio" name="<% join('-', ('rule', $rule_num, 'sfields', 'aggreg')) %>" id="<% join('-', ('rule', $rule_num, 'sfields', 'aggreg', $agtype)) %>" value= "<% $agtype %>" <% ($agtype eq $val) ? 'checked' : '' %>/>
+                        <label for="<% join('-', ('rule', $rule_num, 'sfields' ,'aggreg', $agtype)) %>"><% $agtype %></label>
+                    </div>
 %   }
                 </div>
                 <div class="field-container">
@@ -64,12 +67,16 @@
     <div class="elgrp">
         <div class="el rfields-list field-list">
             <fieldset>
-                <legend>... THEN REJECT IF values on the page are </legend>
+                <legend>Reject fields</legend>
+                <div class="ctlgrp">
 %   $val = (exists $actual_values->{'rfieldsaggreg'}) ? @{$actual_values->{'rfieldsaggreg'}}[0] : (keys %$aggreg_types)[0];
 %   foreach my $agtype (sort keys %$aggreg_types) {
-        <div><input type="radio" name="<% join('-', ('rule', $rule_num, 'rfields', 'aggreg')) %>" id="<% join('-', ('rule', $rule_num, 'rfields', 'aggreg', $agtype)) %>" value= "<% $agtype %>" <% ($agtype eq $val) ? 'checked' : '' %> /><label for="<% join('-', ('rule', $rule_num, 'rfields', 'aggreg', $agtype)) %>"><% $agtype %></label></div>
+        <div>
+            <input type="radio" name="<% join('-', ('rule', $rule_num, 'rfields', 'aggreg')) %>" id="<% join('-', ('rule', $rule_num, 'rfields', 'aggreg', $agtype)) %>" value= "<% $agtype %>" <% ($agtype eq $val) ? 'checked' : '' %> />
+            <label for="<% join('-', ('rule', $rule_num, 'rfields', 'aggreg', $agtype)) %>"><% $agtype %></label>
+        </div>
 %   }
-                </legend>
+                </div>
                 <div class="field-container">
 %   $field_num = 1;
 %   $fields = (exists $actual_values->{'rfields'}) ? $actual_values->{'rfields'} : [];
