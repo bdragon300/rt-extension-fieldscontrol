@@ -195,6 +195,7 @@ sub check_ticket {
 
     my $config = load_config;
     return $errors unless $config; # No rules
+    return $errors unless exists($ARGSRef->{'SubmitTicket'});
 
     my $fields = get_fields_list;
     my $txn_values = fill_txn_fields($fields, $ticket, $ARGSRef);
@@ -213,7 +214,12 @@ sub check_ticket {
             unless exists($aggreg_types->{$sf_aggreg_type});
         my $aggreg_res = $aggreg_types->{$sf_aggreg_type}->($matches);
 
-        next if ($aggreg_res == 0 && scalar(@{$rule->{'sfields'}}) > 0); # Apply rule if no sfields
+        # Apply rule if no sfields or all ones are undef
+        if ($aggreg_res == 0 
+            && scalar(@{$matches->{'match'}}, @{$matches->{'mismatch'}}) > 0)
+        {
+            next;
+        } 
 
         my $rvalues = {%$ticket_values, %$txn_values};
         $matches = check_txn_fields($rvalues, $rule->{'rfields'});
