@@ -24,14 +24,14 @@ our $available_fields = {
     'Ticket.Queue'                  => 'Queue',
     'Transaction.Attach'            => 'Attach',
     'Transaction.Content'           => 'Content',
-    'Transaction.MessageType'       => 'UpdateType',
     'Transaction.Worked'            => 'UpdateTimeWorked',
     'Transaction.Content'           => 'UpdateContent',
     'Transaction.Subject'           => 'UpdateSubject',
     'Transaction.One-time-CC'       => 'UpdateCc',
     'Transaction.One-time-Bcc'      => 'UpdateBcc',
     'Transaction.Sign'              => 'Sign',
-    'Transaction.Encrypt'           => 'Encrypt'
+    'Transaction.Encrypt'           => 'Encrypt',
+    'Transaction.Type'              => '__Dynamic__'
 };
 
 # Empty value in ARGS in that fields means that user did not touch them
@@ -106,6 +106,7 @@ sub fill_txn_fields {
     my $fields = shift;
     my $ticket = shift;
     my $ARGSRef = shift;
+    my $callback_name = shift;
 
     my $res = {};
     foreach (grep /^Ticket./, keys %$fields) {
@@ -132,6 +133,22 @@ sub fill_txn_fields {
         my @arg_val = grep /^Object-[:\w]+-[0-9]+-CustomField-${cf_id}-Value[^-]?$/, keys %$ARGSRef;
         $res->{$cf_abbr} = $ARGSRef->{$arg_val[0]} if (@arg_val);
     }
+
+    # Transaction.Type
+    if (ucfirst $callback_name eq 'Update') {
+        if (exists $ARGSRef->{'UpdateType'} &
+            $ARGSRef->{'UpdateType'} eq 'private')
+        {
+            $res->{'Transaction.Type'} = ['Comment', 'Update'];
+        } else {
+            $res->{'Transaction.Type'} = ['Correspond', 'Update', 'Reply'];
+        }
+    } elsif (ucfirst $callback_name eq 'Modify') {
+        $res->{'Transaction.Type'} = ['Set', 'Basics', 'Modify', 'CustomField', 'Status'];
+    } elsif (ucfirst $callback_name eq 'ModifyAll') {
+        $res->{'Transaction.Type'} = ['Jumbo', 'ModifyAll', 'Status'];
+    }
+
     return $res;
 }
 
@@ -191,6 +208,7 @@ sub check_ticket {
 
     my $ticket = shift;
     my $ARGSRef = shift;
+    my $callback_name = shift;
     my $errors = [];
 
     my $config = load_config;
@@ -198,7 +216,7 @@ sub check_ticket {
     return $errors unless exists($ARGSRef->{'SubmitTicket'});
 
     my $fields = get_fields_list;
-    my $txn_values = fill_txn_fields($fields, $ticket, $ARGSRef);
+    my $txn_values = fill_txn_fields($fields, $ticket, $ARGSRef, $callback_name);
     my $ticket_values = fill_ticket_fields($fields, $ticket);
 
     foreach my $rule (@{$config}) {
