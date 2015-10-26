@@ -139,9 +139,9 @@ sub fill_txn_fields {
         if (exists $ARGSRef->{'UpdateType'} &
             $ARGSRef->{'UpdateType'} eq 'private')
         {
-            $res->{'Transaction.Type'} = ['Comment', 'Update'];
+            $res->{'Transaction.Type'} = ['Comment', 'Update', 'Status'];
         } else {
-            $res->{'Transaction.Type'} = ['Correspond', 'Update', 'Reply'];
+            $res->{'Transaction.Type'} = ['Correspond', 'Update', 'Reply', 'Status'];
         }
     } elsif (ucfirst $callback_name eq 'Modify') {
         $res->{'Transaction.Type'} = ['Set', 'Basics', 'Modify', 'CustomField', 'Status'];
