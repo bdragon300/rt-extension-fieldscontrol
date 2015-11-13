@@ -42,9 +42,9 @@ our $empty_is_unchanged_fields = {
 
 our $available_ops = {
     'equal'             => sub { (ref($_[0]) eq 'ARRAY') ? int(grep(/^$_[1]$/, @{$_[0]}))  : int($_[0] eq $_[1]); },
-    'not equal'         => sub { (ref($_[0]) eq 'ARRAY') ? int(grep(!/^$_[1]$/, @{$_[0]})) : int($_[0] ne $_[1]); },
+    'not equal'         => sub { (ref($_[0]) eq 'ARRAY') ? int( ! grep(/^$_[1]$/, @{$_[0]})) : int($_[0] ne $_[1]); },
     'match regex'       => sub { (ref($_[0]) eq 'ARRAY') ? int(grep(/$_[1]/, @{$_[0]})) : int($_[0] =~ /$_[1]/); },
-    'not match regex'   => sub { (ref($_[0]) eq 'ARRAY') ? int(grep(!/$_[1]/, @{$_[0]})) : int($_[0] !~ /$_[1]/); },
+    'not match regex'   => sub { (ref($_[0]) eq 'ARRAY') ? int( ! grep(/$_[1]/, @{$_[0]})) : int($_[0] !~ /$_[1]/); },
 };
 
 # 'Config value' => 'Display text'
