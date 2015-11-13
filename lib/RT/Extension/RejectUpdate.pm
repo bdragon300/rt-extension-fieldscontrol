@@ -234,7 +234,8 @@ sub check_ticket {
 
         # Apply rule if no sfields or all ones are undef
         if ($aggreg_res == 0 
-            && scalar(@{$matches->{'match'}}, @{$matches->{'mismatch'}}) > 0)
+            && scalar(@{$matches->{'match'}}) > 0
+            && scalar(@{$matches->{'mismatch'}}) > 0)
         {
             next;
         } 
@@ -243,7 +244,7 @@ sub check_ticket {
         $matches = check_txn_fields($rvalues, $rule->{'rfields'});
 
         die "INTERNAL ERROR: [$PACKAGE] incorrect config in database. Reconfigure please." 
-            unless exists($aggreg_types->{$sf_aggreg_type});
+            unless exists($aggreg_types->{$rf_aggreg_type});
         $aggreg_res = $aggreg_types->{$rf_aggreg_type}->($matches);
 
         my $rule_name = $rule->{'rulename'};
