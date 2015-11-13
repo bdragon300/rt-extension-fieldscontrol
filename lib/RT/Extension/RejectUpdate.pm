@@ -234,8 +234,9 @@ sub check_ticket {
 
         # Apply rule if no sfields or all ones are undef
         if ($aggreg_res == 0 
-            && scalar(@{$matches->{'match'}}) > 0
-            && scalar(@{$matches->{'mismatch'}}) > 0)
+            && (scalar(@{$matches->{'match'}}) > 0
+                || scalar(@{$matches->{'mismatch'}}) > 0)
+        )
         {
             next;
         } 
