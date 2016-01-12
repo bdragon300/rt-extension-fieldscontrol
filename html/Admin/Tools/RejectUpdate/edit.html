@@ -1,0 +1,180 @@
+<& /Admin/Elements/Header, Title => $title &>
+<& /Elements/Tabs &>
+
+<& /Elements/ListActions, actions => \@results &>
+
+<style>
+    .el span.label {
+        display: block;
+        text-align: left;
+    }
+    .elgrp div.el {
+        display: inline-block;
+        margin: 10px 10px;
+        vertical-align: top;
+    }
+    .field-container .field div.el{
+        margin: 0;
+    }
+    .el > legend,
+    .elgrp > legend {
+        font-size: 1.4em;
+        /*color: #777;*/
+        display: block;
+        border-bottom: 2px solid black;
+        padding: 3px;
+        margin-bottom: 5px;
+    }
+    .ctlgrp {
+        margin-bottom: 10px;
+    }
+</style>
+
+<form action="/Admin/Tools/RejectUpdate/edit.html?id=<% $id %>&Create=<% $Create %>" method="post">
+    <& Elements/RejectRule, filling => $filling, data => $rule, aggreg_types => \%aggreg_types &>
+    <& /Elements/Submit, Name => 'submit', Label => loc('Save Changes') &>
+%   if ($Create == 0) {
+        <& /Elements/Submit, Name => 'remove', Label => loc('REMOVE'), OnClick => "return confirm('Do you want to remove rule?');" &>
+%   }
+</form>
+
+<%init>
+use Data::Dumper qw{Dumper};
+
+my $title = loc('Reject rule');
+unless ($session{'CurrentUser'}->HasRight( Object=> $RT::System, Right => 'SuperUser')) {
+    Abort(loc('This feature is only available to system administrators'));
+}
+
+my $config = RT::Extension::RejectUpdate::load_config;
+my @results;
+my $rule = {};
+
+$config = [] unless (defined($config));
+
+$id += 0;
+$Create += 0;
+unless (defined($config->[$id]) || $Create) {
+    Abort('ERROR: Invalid id');
+}
+unless ($Create) {
+    $rule = $config->[$id];
+}
+
+
+my @ops = sort keys %${RT::Extension::RejectUpdate::available_ops};
+my @fields_list = sort keys %{RT::Extension::RejectUpdate::get_fields_list()};
+my %aggreg_types = %${RT::Extension::RejectUpdate::aggreg_types};
+my $filling = {
+    fields => \@fields_list,
+    operations => \@ops
+};
+
+
+if ($ARGS{'remove'}) {
+    splice(@$config, $id, 1);
+    my ($res, $msg) = RT::Extension::RejectUpdate::write_config($config);
+    if ($res) {
+        push @results, 'Rule #' . $id . ' removed';
+    } else {
+        push @results, 'ERROR: Cannot remove:' . $msg;
+    }
+    MaybeRedirectForResults(
+        Actions   => \@results,
+        Path      => "/Admin/Tools/RejectUpdate"
+    );
+}
+
+
+if ($ARGS{'submit'}) {
+    my $i = 1;
+    my $tickets = RT::Tickets->new( RT::SystemUser ); #Object for checking SQL correctness
+    $rule = {};
+
+    # Retrieve rule name
+    push @results, "ERROR: Empty name" unless ($ARGS{'name'});
+    $rule->{'rulename'} = $ARGS{'name'};
+
+    # Check whether SQL correct
+    foreach my $key (('searchsql')) {
+        my $val = $ARGS{$key};
+        push @results, "ERROR: Empty " . ucfirst ${key} unless $val;
+        my ($res, $msg) = $tickets->FromSQL($val);
+
+        unless ($res) {
+            push @results, "ERROR: Wrong " . ucfirst ${key} . ": " . $msg;
+        }
+        $rule->{$key} = $val;
+    }
+    
+    # Retrieve fields
+    my %field_types = (
+        'rfields' => 'Reject field',
+        'sfields' => 'Condition'
+    );
+    foreach my $field_type (keys %field_types) {
+        my $j = 1;
+        $rule->{$field_type} = [];
+
+        while (defined $ARGS{join('-', ($field_type, $j, 'name'))})
+        {
+            my $f = $ARGS{join('-', ($field_type, $j, 'name'))};
+            my $op = $ARGS{join('-', ($field_type, $j, 'op'))};
+            my $val = $ARGS{join('-', ($field_type, $j, 'value'))};
+
+            if (defined $ARGS{join('-', ($field_type, $j, 'delete'))}) {
+                $j++;
+                next;
+            }
+
+            push @{$rule->{$field_type}}, {
+                'field' => $f,
+                'op' => $op,
+                'value' => $val
+            };
+
+            unless ((grep { $_ eq $f } @fields_list)
+                && (grep { $_ eq $op } @ops))
+            {
+                push @results, "ERROR: Check " . $field_types{$field_type} . " ${j}";
+            }
+            $j++;
+        }
+
+        my $aggreg_type = $ARGS{join('-', ($field_type, 'aggreg'))};
+        if (grep {$aggreg_type eq $_} keys %aggreg_types) 
+        {
+            $rule->{$field_type . 'aggreg'} = $aggreg_type;
+        } else {
+            push @results, "ERROR: " . $field_types{$field_type} . " aggregation type is incorrect";
+        }
+    }
+    unless (@{$rule->{'rfields'}}) {
+        push @results, "ERROR: No " . $field_types{'rfields'} . " fields";
+    }
+
+
+    unless (@results) {
+        $id = scalar(@$config) if ($Create); 
+        $config->[$id] = {%$rule};
+        my ($res, $msg) = RT::Extension::RejectUpdate::write_config($config);
+        if ($res) {
+            push @results, 'Configuration saved';
+        } else {
+            push @results, 'ERROR: Cannot save configuration:' . $msg;
+        }
+
+        MaybeRedirectForResults(
+            Actions   => \@results,
+            Path      => "/Admin/Tools/RejectUpdate"
+        );
+    }
+
+}
+</%init>
+
+<%args>
+$id => 0
+$Create => 0
+$Remove => 0
+</%args>

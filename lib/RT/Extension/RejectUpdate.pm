@@ -162,9 +162,9 @@ sub load_config {
     if (ref($cfg) eq 'ARRAY') {
         return $cfg;
     } elsif (defined $cfg) {
-        RT::Logger->warning("[$PACKAGE]: Incorrect settings format in database");
+        RT::Logger->warning("[$PACKAGE]: Incorrect settings format in database"); #FIXME: shows when settings are empty
     }
-    return (undef);
+    return (undef); #FIXME: must return []
 }
 
 sub write_config {
@@ -197,11 +197,10 @@ sub write_config {
     }
 
     if (scalar(@{$config})) {
-        $new_cfg->SetContent($config);
+        return $new_cfg->SetContent($config);
     } else {
-        $new_cfg->DeleteAllSubValues;
+        return $new_cfg->DeleteAllSubValues;
     }
-    return 0;
 }
 
 sub check_ticket {

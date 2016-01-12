@@ -3,91 +3,7 @@
 
 <& /Elements/ListActions, actions => \@results &>
 
-<style>
-    .el span.label {
-        display: block;
-        text-align: left;
-    }
-    .elgrp div.el {
-        display: inline-block;
-        margin: 10px 10px;
-        vertical-align: top;
-    }
-    .field-container .field div.el{
-        margin: 0;
-    }
-    .el > legend,
-    .elgrp > legend {
-        font-size: 1.4em;
-        /*color: #777;*/
-        display: block;
-        border-bottom: 2px solid black;
-        padding: 3px;
-        margin-bottom: 5px;
-    }
-    .ctlgrp {
-        margin-bottom: 10px;
-    }
-</style>
-% my $rule_data = {
-%   fields => \@fields_list,
-%   operations => \@ops
-% };
-<div id="reject-new-rule" style="display: none">
-    <& Elements/RejectRule, dummy => 1, data => $rule_data, aggreg_types => \%aggreg_types &>
-</div>
-<form action="/Admin/Tools/RejectUpdate" method="post">
-    <div id="reject-rules">
-% my $rule_num = 1;
-%
-% foreach my $rule (@{$config}) {
-%   my $rule_actual_values = {
-%       rulename => [$rule->{'rulename'}],
-%       searchsql => [$rule->{'searchsql'}],
-%       sfieldsaggreg => [$rule->{'sfieldsaggreg'}],
-%       rfieldsaggreg => [$rule->{'rfieldsaggreg'}],
-%       sfields => $rule->{'sfields'},
-%       rfields => $rule->{'rfields'}
-%   };
-<& Elements/RejectRule, data => $rule_data, actual_values => $rule_actual_values, rule_num => $rule_num, aggreg_types => \%aggreg_types &>
-% $rule_num++;
-% }
-    </div>
-    <input id="reject-add-rule" class="button" type="button" value="Add rule" />
-    <& /Elements/Submit, Name => 'reject-submit', Label => loc('Save Changes') &>
-</form>
-
-<script type="text/javascript">
-    function add_field(e) {
-        reject_rule = jQuery(e.target).parents("#reject-rules > .reject-rule").first();
-        rule_index = jQuery("#reject-rules > .reject-rule").index(reject_rule);
-        field_container = jQuery(e.target).parents(".field-list").first().find(".field-container");
-        // field_container = reject_rule.find(".field-container");
-        fields_count = field_container.find(".field").size();
-        field_type = e.data.field_type;
-
-        str = jQuery("#reject-new-field")
-                .html()
-                .replace(/%d/g, rule_index + 1)
-                .replace(/%e/g, fields_count + 1)
-                .replace(/%f/g, field_type);
-        field_container.append(str);
-    }
-
-    jQuery("#reject-add-rule").click(function() {
-        rules_count = jQuery("#reject-rules > .reject-rule").size();
-        str = jQuery("#reject-new-rule").html().replace(/%d/g, rules_count + 1).replace(/%e/g, "1");
-
-        inserted = jQuery("#reject-rules").append(str);
-        jQuery(".add-rfield").last().click({field_type: "rfields"}, add_field);
-        jQuery(".add-sfield").last().click({field_type: "sfields"}, add_field);
-
-        jQuery(".add-rfield").last().click();
-    });
-
-    jQuery(".add-sfield").click({field_type: "sfields"}, add_field);
-    jQuery(".add-rfield").click({field_type: "rfields"}, add_field);
-</script>
+<& Elements/CollectionTable, headers => $table_headers, rows => $table_rows &>
 
 <%init>
 my $title = loc('Reject ticket configuration');
@@ -95,102 +11,24 @@ unless ($session{'CurrentUser'}->HasRight( Object=> $RT::System, Right => 'Super
     Abort(loc('This feature is only available to system administrators'));
 }
 
-my @ops = sort keys %${RT::Extension::RejectUpdate::available_ops};
-my @fields_list = sort keys %{RT::Extension::RejectUpdate::get_fields_list()};
-my %aggreg_types = %${RT::Extension::RejectUpdate::aggreg_types};
-
-use RT::CurrentUser;
-use RT::SQL;
 use Data::Dumper qw(Dumper);
 
 my $config = RT::Extension::RejectUpdate::load_config;
 my @results;
 
-if ($ARGS{'reject-submit'}) {
-    my $i = 1;
-    my @items = ();
-    my $tickets = RT::Tickets->new( RT::SystemUser ); #Object for checking SQL correctness
-    while (defined $ARGS{'rule-' . $i}) {
-        my $rule_prefix = 'rule-' . $i;
-        if (defined $ARGS{join('-', ($rule_prefix, 'delete'))}) {
-            $i++;
-            next;
-        }
-        my %item = ();
-
-        # Check whether SQL correct
-        foreach my $key (('searchsql')) {
-            my $val = $ARGS{join('-', ($rule_prefix, $key))};
-            push @results, "ERROR: Empty " . ucfirst ${key} . " in Rule ${i}" unless $val;
-            my ($res, $msg) = $tickets->FromSQL($val);
-
-            unless ($res) {
-                push @results, "ERROR: Wrong " . ucfirst ${key} . " in Rule ${i}: " . $msg;
-            }
-            $item{$key} = $val;
-        }
-        
-        my %field_types = (
-            'rfields' => 'Reject field',
-            'sfields' => 'Condition'
-        );
-
-        foreach my $field_type (keys %field_types) {
-            my $j = 1;
-            $item{$field_type} = [];
-
-            while (defined $ARGS{join('-', ($rule_prefix, $field_type, $j, 'name'))})
-            {
-                my $f = $ARGS{join('-', ($rule_prefix, $field_type, $j, 'name'))};
-                my $op = $ARGS{join('-', ($rule_prefix, $field_type, $j, 'op'))};
-                my $val = $ARGS{join('-', ($rule_prefix, $field_type, $j, 'value'))};
-
-                if (defined $ARGS{join('-', ($rule_prefix, $field_type, $j, 'delete'))}) {
-                    $j++;
-                    next;
-                }
-
-                push @{$item{$field_type}}, {
-                    'field' => $f,
-                    'op' => $op,
-                    'value' => $val
-                };
-
-                unless ((grep { $_ eq $f } @fields_list)
-                    && (grep { $_ eq $op } @ops))
-                {
-                    push @results, "ERROR: Check " . $field_types{$field_type} . " ${j} in Rule ${i}";
-                }
-                $j++;
-            }
-
-            my $aggreg_type = $ARGS{join('-', ($rule_prefix, $field_type, 'aggreg'))};
-            if (grep {$aggreg_type eq $_} keys %aggreg_types) 
-            {
-                $item{$field_type . 'aggreg'} = $aggreg_type;
-            } else {
-                push @results, "ERROR: " . $field_types{$field_type} . " aggregation type is incorrect in Rule ${i}";
-            }
-        }
-
-        unless (@{$item{'rfields'}}) {
-            push @results, "ERROR: No " . $field_types{'rfields'} . " fields in Rule ${i}";
-        }
-
-        push @results, "ERROR: Empty name in Rule ${i}" unless ($ARGS{join('-', ($rule_prefix, 'name'))});
-        $item{'rulename'} = $ARGS{join('-', ($rule_prefix, 'name'))};
-
-        push @items, {%item};
-        $i++;
-    }
-
-    if (@results) {
-        $config = \@items;
-    } else {
-        RT::Extension::RejectUpdate::write_config(\@items);
-        push @results, 'Configuration saved';
-        $config = RT::Extension::RejectUpdate::load_config();
-    }
-
+# Fill data for CollectionTable
+my $table_rows = [];
+my $table_headers = ['#', 'Name', 'Reject fields'];
+my $i = 0;
+while (defined($config->[$i])) {
+    push @$table_rows, {
+        'link' => '/Admin/Tools/RejectUpdate/edit.html?id=' . $i,
+        'cols' => [
+            $i,
+            $config->[$i]->{'rulename'},
+            (join ', ', map {$_->{'field'}} @{$config->[$i]->{'rfields'}})
+        ],
+    };
+    $i++;
 }
 </%init>

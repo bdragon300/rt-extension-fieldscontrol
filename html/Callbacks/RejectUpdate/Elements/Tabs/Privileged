@@ -10,5 +10,19 @@ if ( $session{'CurrentUser'}->HasRight( Right => 'ShowConfigTab', Object => RT->
             path        => '/Admin/Tools/RejectUpdate',
         );
     }
+
+    my $page_menu = PageMenu();
+    if ($page_menu) {
+        $page_menu->child(create => 
+            title       => loc('Create'),
+            description => 'Create new RejectUpdate rule',
+            path        => '/Admin/Tools/RejectUpdate/edit.html?Create=1'
+        );
+        $page_menu->child(select => 
+            title       => loc('Select'),
+            description => 'RejectUpdate rule list',
+            path        => '/Admin/Tools/RejectUpdate'
+        );
+    }
 }
 </%init>

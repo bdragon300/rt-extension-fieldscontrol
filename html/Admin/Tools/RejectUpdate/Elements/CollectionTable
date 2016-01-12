@@ -1,0 +1,33 @@
+<table class="collection collection-as-table">
+% if (@$headers) {
+<tr class="collection-as-table">
+%   foreach my $header (@$headers) {
+    <th class="collection-as-table"><% $header %></th>
+%   }
+</tr>
+% }
+
+% my $i = 0;
+% if (@$rows) {
+%   foreach my $row (@$rows) {
+        <tr class="<% ($i % 2) ? 'oddline' : 'evenline' %>">
+%       if ($checkboxes) {
+            <td class="collection-as-table"><input type="checkbox" name="item-" . $i></td>
+%       }
+%       foreach my $col (@{$row->{'cols'}}) {
+%           if ($row->{'link'}) {
+                <td class="collection-as-table"><a href="<% $row->{'link'} %>"><% $col %></a></td>
+%           } else {
+                <td class="collection-as-table"><% $col %></td>
+%           }
+%       }
+        </tr>
+%   }
+% }
+</table>
+
+<%args>
+$headers => []
+$rows => []
+$checkboxes => 0
+</%args>
