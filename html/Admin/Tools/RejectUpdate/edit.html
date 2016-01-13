@@ -55,7 +55,7 @@ $config = [] unless (defined($config));
 $id += 0;
 $Create += 0;
 unless (defined($config->[$id]) || $Create) {
-    Abort('ERROR: Invalid id');
+    Abort(loc('ERROR: Invalid id'));
 }
 unless ($Create) {
     $rule = $config->[$id];
@@ -75,9 +75,9 @@ if ($ARGS{'remove'}) {
     splice(@$config, $id, 1);
     my ($res, $msg) = RT::Extension::RejectUpdate::write_config($config);
     if ($res) {
-        push @results, 'Rule #' . $id . ' removed';
+        push @results, loc('Rule #[_1] removed', $id);
     } else {
-        push @results, 'ERROR: Cannot remove:' . $msg;
+        push @results, loc('ERROR: Cannot remove: [_1]', $msg);
     }
     MaybeRedirectForResults(
         Actions   => \@results,
@@ -92,25 +92,25 @@ if ($ARGS{'submit'}) {
     $rule = {};
 
     # Retrieve rule name
-    push @results, "ERROR: Empty name" unless ($ARGS{'name'});
+    push @results, loc("ERROR: Empty name") unless ($ARGS{'name'});
     $rule->{'rulename'} = $ARGS{'name'};
 
     # Check whether SQL correct
     foreach my $key (('searchsql')) {
         my $val = $ARGS{$key};
-        push @results, "ERROR: Empty " . ucfirst ${key} unless $val;
+        push @results, loc("ERROR: Wrong [_1]", ucfirst ${key}) unless $val;
         my ($res, $msg) = $tickets->FromSQL($val);
 
         unless ($res) {
-            push @results, "ERROR: Wrong " . ucfirst ${key} . ": " . $msg;
+            push @results, loc("ERROR: Wrong [_1]: [_2]", ucfirst ${key}, $msg);
         }
         $rule->{$key} = $val;
     }
     
     # Retrieve fields
     my %field_types = (
-        'rfields' => 'Reject field',
-        'sfields' => 'Condition'
+        'rfields' => 'Reject field', #loc
+        'sfields' => 'Condition' #loc
     );
     foreach my $field_type (keys %field_types) {
         my $j = 1;
@@ -136,7 +136,7 @@ if ($ARGS{'submit'}) {
             unless ((grep { $_ eq $f } @fields_list)
                 && (grep { $_ eq $op } @ops))
             {
-                push @results, "ERROR: Check " . $field_types{$field_type} . " ${j}";
+                push @results, loc("ERROR: Wrong [_1]", $field_types{$field_type} . " #${j}");
             }
             $j++;
         }
@@ -146,11 +146,11 @@ if ($ARGS{'submit'}) {
         {
             $rule->{$field_type . 'aggreg'} = $aggreg_type;
         } else {
-            push @results, "ERROR: " . $field_types{$field_type} . " aggregation type is incorrect";
+            push @results, loc("ERROR: incorrect aggregation type in [_1]", $field_types{$field_type});
         }
     }
     unless (@{$rule->{'rfields'}}) {
-        push @results, "ERROR: No " . $field_types{'rfields'} . " fields";
+        push @results, loc("ERROR: Empty [_1]", $field_types{'rfields'});
     }
 
 
@@ -159,9 +159,9 @@ if ($ARGS{'submit'}) {
         $config->[$id] = {%$rule};
         my ($res, $msg) = RT::Extension::RejectUpdate::write_config($config);
         if ($res) {
-            push @results, 'Configuration saved';
+            push @results, loc('Configuration saved');
         } else {
-            push @results, 'ERROR: Cannot save configuration:' . $msg;
+            push @results, loc('ERROR: Cannot save configuration: [_1]', $msg);
         }
 
         MaybeRedirectForResults(
