@@ -33,7 +33,7 @@
         <span class="label">NEW value</span>
         <input list="<% join('-', ($field_type, $field_num, 'datalist')) %>" 
             type="text" 
-            name="<% join('-', ('rule', $field_type, $field_num, 'value')) %>" 
+            name="<% join('-', ($field_type, $field_num, 'value')) %>" 
             value="<% $val %>" 
             autocomplete="off" />
         <datalist id="<% join('-', ($field_type, $field_num, 'datalist')) %>">
