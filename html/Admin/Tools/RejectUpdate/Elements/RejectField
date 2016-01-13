@@ -39,6 +39,7 @@
         <datalist id="<% join('-', ($field_type, $field_num, 'datalist')) %>">
             <option value="(?#MandatoryRegex).">(?#MandatoryRegex).</option>
             <option value="(?#DigitsRegex)^[\d.]+$">(?#DigitsRegex)^[\d.]+$</option>
+            <option value="__old__">&lt;Old value&gt;</option>
         </datalist>
     </div>
     <div class="el">

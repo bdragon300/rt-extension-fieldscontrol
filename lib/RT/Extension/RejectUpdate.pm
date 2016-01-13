@@ -121,7 +121,9 @@ sub fill_txn_fields {
         }
     }
 
-    # Special check for Owner
+    # "Current" values substitution that rules will be compared with
+    #
+    # Ticket.Owner
     # RT::Nobody means empty value
     $res->{'Ticket.Owner'} = '' if ($res->{'Ticket.Owner'} eq RT::Nobody->id);
 
@@ -225,6 +227,14 @@ sub check_ticket {
         my $sf_aggreg_type = $rule->{'sfieldsaggreg'};
         my $rf_aggreg_type = $rule->{'rfieldsaggreg'};
 
+        # Substitute special tags in sfields values
+        foreach (@{$rule->{'sfields'}}) {
+            if ($_->{'value'} eq '__old__' 
+                && exists($ticket_values->{$_->{'field'}})) 
+            {
+                $_->{'value'} = $ticket_values->{$_->{'field'}} 
+            }
+        }
         my $matches = check_txn_fields($txn_values, $rule->{'sfields'});
 
         die "INTERNAL ERROR: [$PACKAGE] incorrect config in database. Reconfigure please." 
@@ -240,6 +250,14 @@ sub check_ticket {
             next;
         } 
 
+        # Substitute special tags in rfields values
+        foreach (@{$rule->{'rfields'}}) {
+            if ($_->{'value'} eq '__old__' 
+                && exists($ticket_values->{$_->{'field'}})) 
+            {
+                $_->{'value'} = $ticket_values->{$_->{'field'}} 
+            }
+        }
         my $rvalues = {%$ticket_values, %$txn_values};
         $matches = check_txn_fields($rvalues, $rule->{'rfields'});
 
