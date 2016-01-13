@@ -19,7 +19,7 @@
 %       $val = (exists $data->{'searchsql'}) ? $data->{'searchsql'}: '';
         <div class="el">
             <fieldset>
-                <legend>Apply for tickets</legend>
+                <legend>Old ticket state</legend>
                 <div class="el">
                     <textarea cols="40" rows="6" name="searchsql" placeholder="Ticket SQL"><% $val %></textarea>
                 </div>
@@ -29,7 +29,7 @@
 %       $val = (exists $data->{'sfieldsaggreg'}) ? $data->{'sfieldsaggreg'} : (keys %$aggreg_types)[0];
         <div class="el sfields-list field-list">
             <fieldset>
-                <legend>Additional filter</legend>
+                <legend>New ticket state</legend>
 
                 <div class="ctlgrp">
 %                   foreach my $agtype (sort keys %$aggreg_types) {
@@ -71,7 +71,7 @@
     <div class="elgrp">
         <div class="el rfields-list field-list">
             <fieldset>
-                <legend>Reject fields</legend>
+                <legend>Checking fields (reject if false)</legend>
 
                 <div class="ctlgrp">
 %               $val = (exists $data->{'rfieldsaggreg'}) ? $data->{'rfieldsaggreg'} : (keys %$aggreg_types)[0];
