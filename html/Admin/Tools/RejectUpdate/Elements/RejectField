@@ -31,7 +31,11 @@
 %   $val = (exists $actual_values->{'value'}) ? @{$actual_values->{'value'}}[0] : '';
     <div class="el">
         <span class="label">NEW value</span>
-        <input list="<% join('-', ($field_type, $field_num, 'datalist')) %>" type="text" name="<% join('-', ('rule', $field_type, $field_num, 'value')) %>" value="<% $val %>" />
+        <input list="<% join('-', ($field_type, $field_num, 'datalist')) %>" 
+            type="text" 
+            name="<% join('-', ('rule', $field_type, $field_num, 'value')) %>" 
+            value="<% $val %>" 
+            autocomplete="off" />
         <datalist id="<% join('-', ($field_type, $field_num, 'datalist')) %>">
             <option value="(?#MandatoryRegex).">(?#MandatoryRegex).</option>
             <option value="(?#DigitsRegex)^[\d.]+$">(?#DigitsRegex)^[\d.]+$</option>
@@ -39,11 +43,10 @@
     </div>
     <div class="el">
         <span class="label">&nbsp;</span>
-        <input id="<% 
-            join('-', ($field_type, $field_num, 'delete')) 
-            %>" name="<% 
-            join('-', ($field_type, $field_num, 'delete')) 
-            %>" class="checkbox" type="checkbox">
+        <input id="<% join('-', ($field_type, $field_num, 'delete')) %>" 
+            name="<% join('-', ($field_type, $field_num, 'delete')) %>" 
+            class="checkbox" 
+            type="checkbox" />
         <label for="<% join('-', ($field_type, $field_num, 'delete')) %>">
             <% ($dummy) ? 'IGNORE NEW FIELD?' : 'DELETE FIELD?' %>
         </label>
