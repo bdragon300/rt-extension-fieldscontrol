@@ -95,6 +95,10 @@ if ($ARGS{'submit'}) {
     push @results, "ERROR: Empty name" unless ($ARGS{'name'});
     $rule->{'rulename'} = $ARGS{'name'};
 
+    # Rule enabled
+    $rule->{'enabled'} = (exists($ARGS{'enabled'}));
+    
+
     # Check whether SQL correct
     foreach my $key (('searchsql')) {
         my $val = $ARGS{$key};

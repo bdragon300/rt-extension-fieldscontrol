@@ -217,6 +217,9 @@ sub check_ticket {
     my $ticket_values = fill_ticket_fields($fields, $ticket);
 
     foreach my $rule (@{$config}) {
+        next unless ($rule->{'enabled'});
+
+        # Ticket match TicketSQL ("Old state")
         my $res = find_ticket($ticket, $rule->{'searchsql'});
         next unless $res;
 

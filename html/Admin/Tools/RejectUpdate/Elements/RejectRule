@@ -6,14 +6,19 @@
 %
 <&| /Widgets/TitleBox,title => 'Reject Rule', class=>'reject-rule', 'rolledup'=>0 &>
 
-%   $val = (exists $data->{'rulename'}) ? $data->{'rulename'} : '';
     <div class="elgrp">
+%   $val = (exists $data->{'rulename'}) ? $data->{'rulename'} : '';
         <div class="el">
             <span class="label">Rule name</span>
             <input type="text" name="name" value="<% $val %>" />
         </div>
+%   $val = (exists $data->{'enabled'}) ? $data->{'enabled'} : 1;
+        <div class="el">
+            <span class="label">&nbsp;</span>
+            <input id="enabled" name="enabled" class="checkbox" type="checkbox" <% $val ? 'checked' : '' %>>
+            <label for="enabled">Enabled</label>
+        </div>
     </div>
-
 
     <div class="elgrp">
 %       $val = (exists $data->{'searchsql'}) ? $data->{'searchsql'}: '';

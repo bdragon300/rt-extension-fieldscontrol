@@ -18,7 +18,7 @@ my @results;
 
 # Fill data for CollectionTable
 my $table_rows = [];
-my $table_headers = ['#', 'Name', 'Reject fields'];
+my $table_headers = ['#', 'Name', 'Reject fields', 'Enabled'];
 my $i = 0;
 while (defined($config->[$i])) {
     push @$table_rows, {
@@ -26,7 +26,8 @@ while (defined($config->[$i])) {
         'cols' => [
             $i,
             $config->[$i]->{'rulename'},
-            (join ', ', map {$_->{'field'}} @{$config->[$i]->{'rfields'}})
+            (join ', ', map {$_->{'field'}} @{$config->[$i]->{'rfields'}}),
+            ($config->[$i]->{'enabled'} ? 'Enabled' : 'Disabled') #loc
         ],
     };
     $i++;
