@@ -166,7 +166,7 @@ sub load_config {
     } elsif (defined $cfg) {
         RT::Logger->warning("[$PACKAGE]: Incorrect settings format in database");
     }
-    return (undef); #FIXME: must return []
+    return (undef);
 }
 
 sub write_config {
