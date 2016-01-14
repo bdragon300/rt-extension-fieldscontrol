@@ -1,4 +1,2 @@
-Add Russian localization
-Add fields such CurrentUser, MessageType (Comment/Correspond), etc.
-Only one rule at time can be created/edited (native RT interface)
+Add fields such CurrentUser, etc.
 Temporary disable all rules checkbox
