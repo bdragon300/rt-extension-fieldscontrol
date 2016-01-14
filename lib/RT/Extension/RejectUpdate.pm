@@ -15,14 +15,14 @@ our $PACKAGE = __PACKAGE__;
 our $available_fields = {
     'Ticket.Subject'                => 'Subject',
     'Ticket.Status'                 => 'Status',
-    'Ticket.Owner'                  => 'Owner',
+    'Ticket.OwnerId'                => 'Owner',
     'Ticket.Priority'               => 'Priority',
     'Ticket.InitialPriority'        => 'InitialPriority',
     'Ticket.FinalPriority'          => 'FinalPriority',
     'Ticket.TimeEstimated'          => 'TimeEstimated',
     'Ticket.TimeWorked'             => 'TimeWorked',
     'Ticket.TimeLeft'               => 'TimeLeft',
-    'Ticket.Queue'                  => 'Queue', #FIXME: queue id, not name
+    'Ticket.QueueId'                => 'Queue',
     'Transaction.Attach'            => 'Attach',
     'Transaction.Content'           => 'Content',
     'Transaction.Worked'            => 'UpdateTimeWorked',
@@ -38,7 +38,7 @@ our $available_fields = {
 # Empty value in ARGS in that fields means that user did not touch them
 #loc_left_pair
 our $empty_is_unchanged_fields = {
-    'Ticket.Owner'                  => 'Owner',
+    'Ticket.OwnerId'                => 'Owner',
     'Ticket.Status'                 => 'Status'
 };
 
@@ -79,7 +79,7 @@ sub fill_ticket_fields {
 
     my $res = {};
     foreach my $f (grep /^Ticket./, keys %$fields) {
-        my ($fld) = $f =~ /Ticket.(.*)/;
+        my $fld = $fields->{$f};
         $res->{$f} = $ticket->_Value($fld);
     }
     my $cfs = $ticket->CustomFields;
@@ -127,9 +127,9 @@ sub fill_txn_fields {
 
     # "Current" values substitution that rules will be compared with
     #
-    # Ticket.Owner
+    # Ticket.OwnerId
     # RT::Nobody means empty value
-    $res->{'Ticket.Owner'} = '' if ($res->{'Ticket.Owner'} eq RT::Nobody->id);
+    $res->{'Ticket.OwnerId'} = '' if ($res->{'Ticket.OwnerId'} eq RT::Nobody->id);
 
     foreach (grep /^Transaction./, keys %$fields) {
         $res->{$_} = $ARGSRef->{$fields->{$_}} if (defined $ARGSRef->{$fields->{$_}});
@@ -219,7 +219,9 @@ sub check_ticket {
     my $fields = get_fields_list;
     my $txn_values = fill_txn_fields($fields, $ticket, $ARGSRef, $callback_name);
     my $ticket_values = fill_ticket_fields($fields, $ticket);
-
+RT::Logger->debug(Dumper $txn_values);
+RT::Logger->debug(Dumper $ticket_values);
+RT::Logger->debug(Dumper $config);
     foreach my $rule (@{$config}) {
         next unless ($rule->{'enabled'});
 

@@ -121,8 +121,8 @@ msgstr "Тикет.Тема"
 msgid "Ticket.Status"
 msgstr "Тикет.Статус"
 
-msgid "Ticket.Owner"
-msgstr "Тикет.Ответственный"
+msgid "Ticket.OwnerId"
+msgstr "Тикет.Номер ответственного"
 
 msgid "Ticket.Priority"
 msgstr "Тикет.Приоритет"
@@ -142,8 +142,8 @@ msgstr "Тикет.Время в работе"
 msgid "Ticket.TimeLeft"
 msgstr "Тикет.Осталось времени"
 
-msgid "Ticket.Queue"
-msgstr "Тикет.Очередь"
+msgid "Ticket.QueueId"
+msgstr "Тикет.Номер очереди"
 
 msgid "Transaction.Attach"
 msgstr "Транзакция.Вложение"
