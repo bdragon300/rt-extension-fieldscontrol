@@ -4,7 +4,7 @@
 %   operations => $filling->{'operations'}
 %  };
 %
-<&| /Widgets/TitleBox,title => loc('Reject Rule'), class=>'reject-rule', 'rolledup'=>0 &>
+<&| /Widgets/TitleBox,title => loc('Reject rule'), class=>'reject-rule', 'rolledup'=>0 &>
 
 %   $val = (exists $data->{'rulename'}) ? $data->{'rulename'} : '';
     <div class="elgrp">
@@ -59,7 +59,7 @@
                 </div>
 
                 <div class="elgrp">
-                    <input class="add-field button" type="button" value="<&|/l&>Add condition</&>" id="add-sfields" />
+                    <input class="add-field button" type="button" value="<&|/l&>Add field</&>" id="add-sfields" />
                 </div>
 
             </fieldset>
@@ -71,7 +71,7 @@
     <div class="elgrp">
         <div class="el rfields-list field-list">
             <fieldset>
-                <legend><&|/l&>Check new ticket state (reject if true)</&></legend>
+                <legend><&|/l&>Checking fields (reject update if true)</&></legend>
 
                 <div class="ctlgrp">
 %               $val = (exists $data->{'rfieldsaggreg'}) ? $data->{'rfieldsaggreg'} : (keys %$aggreg_types)[0];

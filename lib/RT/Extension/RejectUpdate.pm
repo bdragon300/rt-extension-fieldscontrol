@@ -22,7 +22,7 @@ our $available_fields = {
     'Ticket.TimeEstimated'          => 'TimeEstimated',
     'Ticket.TimeWorked'             => 'TimeWorked',
     'Ticket.TimeLeft'               => 'TimeLeft',
-    'Ticket.Queue'                  => 'Queue',
+    'Ticket.Queue'                  => 'Queue', #FIXME: queue id, not name
     'Transaction.Attach'            => 'Attach',
     'Transaction.Content'           => 'Content',
     'Transaction.Worked'            => 'UpdateTimeWorked',
@@ -267,12 +267,14 @@ sub check_ticket {
 
         my $rule_name = $rule->{'rulename'};
         if ($aggreg_res == 1) {
-            push(@$errors, 
-                loc("ERROR: Restriction <[_1]>, bad fields: ~[[_2]~]" ,
-                . join(', ', @{$matches->{'match'}}) 
-                . ']'));
+            push @$errors,
+                {
+                    name => $rule_name,
+                    fields => [@{$matches->{'match'}}]
+                };
         }
     }
+
     return $errors;
 }
 

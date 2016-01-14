@@ -6,7 +6,7 @@
 <& Elements/CollectionTable, headers => $table_headers, rows => $table_rows &>
 
 <%init>
-my $title = loc('Reject ticket configuration');
+my $title = loc('RejectUpdate configuration');
 unless ($session{'CurrentUser'}->HasRight( Object=> $RT::System, Right => 'SuperUser')) {
     Abort(loc('This feature is only available to system administrators'));
 }
@@ -18,7 +18,7 @@ my @results;
 
 # Fill data for CollectionTable
 my $table_rows = [];
-my $table_headers = [loc('#'), loc('Name'), loc('Reject fields')];
+my $table_headers = [loc('#'), loc('Name'), loc('Checking fields')];
 my $i = 0;
 while (defined($config->[$i])) {
     push @$table_rows, {
@@ -26,7 +26,7 @@ while (defined($config->[$i])) {
         'cols' => [
             $i,
             $config->[$i]->{'rulename'},
-            (join ', ', map {$_->{'field'}} @{$config->[$i]->{'rfields'}})
+            (join ', ', map {loc($_->{'field'})} @{$config->[$i]->{'rfields'}})
         ],
     };
     $i++;

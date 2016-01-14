@@ -34,14 +34,14 @@
     <& Elements/RejectRule, filling => $filling, data => $rule, aggreg_types => \%aggreg_types &>
     <& /Elements/Submit, Name => 'submit', Label => loc('Save Changes') &>
 %   if ($Create == 0) {
-        <& /Elements/Submit, Name => 'remove', Label => loc('REMOVE'), OnClick => "return confirm('<&|/l&>Do you want to remove rule?</&>');" &>
+        <& /Elements/Submit, Name => 'remove', Label => loc('REMOVE'), OnClick => "return confirm('" . loc("Do you want to remove rule?") . "');" &>
 %   }
 </form>
 
 <%init>
 use Data::Dumper qw{Dumper};
 
-my $title = loc('Reject rule');
+my $title = loc('Tickets update reject rules');
 unless ($session{'CurrentUser'}->HasRight( Object=> $RT::System, Right => 'SuperUser')) {
     Abort(loc('This feature is only available to system administrators'));
 }
@@ -109,8 +109,8 @@ if ($ARGS{'submit'}) {
     
     # Retrieve fields
     my %field_types = (
-        'rfields' => 'Reject field', #loc
-        'sfields' => 'Condition' #loc
+        'rfields' => 'Checking field', #loc
+        'sfields' => 'Field from New ticket state' #loc
     );
     foreach my $field_type (keys %field_types) {
         my $j = 1;
@@ -136,7 +136,7 @@ if ($ARGS{'submit'}) {
             unless ((grep { $_ eq $f } @fields_list)
                 && (grep { $_ eq $op } @ops))
             {
-                push @results, loc("ERROR: Wrong [_1]", $field_types{$field_type} . " #${j}");
+                push @results, loc("ERROR: Wrong [_1]", loc($field_types{$field_type}) . " #${j}");
             }
             $j++;
         }
@@ -146,11 +146,11 @@ if ($ARGS{'submit'}) {
         {
             $rule->{$field_type . 'aggreg'} = $aggreg_type;
         } else {
-            push @results, loc("ERROR: incorrect aggregation type in [_1]", $field_types{$field_type});
+            push @results, loc("ERROR: incorrect aggregation type in [_1]", loc($field_types{$field_type}));
         }
     }
     unless (@{$rule->{'rfields'}}) {
-        push @results, loc("ERROR: Empty [_1]", $field_types{'rfields'});
+        push @results, loc("ERROR: Empty [_1]", loc($field_types{'rfields'}));
     }
 
 

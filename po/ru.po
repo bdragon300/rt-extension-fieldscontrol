@@ -1,0 +1,188 @@
+msgid ""
+msgstr ""
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#
+#index.html
+#
+
+msgid "RejectUpdate configuration"
+msgstr "Конфигурация RejectUpdate"
+
+msgid "Name"
+msgstr "Имя"
+
+msgid "Checking fields"
+msgstr "Проверяемые поля"
+
+#
+#edit.html
+#
+
+msgid "REMOVE"
+msgstr "УДАЛИТЬ"
+
+msgid "Do you want to remove rule?"
+msgstr "Вы действительно хотите удалить правило?"
+
+msgid "Rule"
+msgstr "Правило"
+
+msgid "Tickets update reject rules"
+msgstr "Правила отклонения обновлений тикетов"
+
+msgid "ERROR: Invalid id"
+msgstr "ОШИБКА: Неверный id"
+
+msgid "Rule #%1 removed"
+msgstr "Правило #%1 удалено"
+
+msgid "ERROR: Cannot remove: %1"
+msgstr "ОШИБКА: Невозможно удалить: %1"
+
+msgid "ERROR: Empty name"
+msgstr "ОШИБКА: Пустое имя"
+
+msgid "ERROR: Wrong %1"
+msgstr "ОШИБКА: %1 некорректно"
+
+msgid "ERROR: Wrong %1: %2"
+msgstr "ОШИБКА: %1 некорректно: %2"
+
+msgid "Checking field"
+msgstr "Проверяемое поле"
+
+msgid "Field from New ticket state"
+msgstr "Поле из нового состояния тикета"
+
+msgid "ERROR: incorrect aggregation type in %1"
+msgstr "ОШИБКА: некорректный тип объединения в %1"
+
+msgid "ERROR: Empty %1"
+msgstr "ОШИБКА: %1 пусто"
+
+msgid "Configuration saved"
+msgstr "Конфигурация сохранена"
+
+msgid "ERROR: Cannot save configuration: %1"
+msgstr "ОШИБКА: Невозможно сохранить конфигурацию: %1"
+
+#
+#RejectRule
+#
+msgid "Rule name"
+msgstr "Имя правила"
+
+msgid "Old ticket state"
+msgstr "Старое состояние тикета"
+
+msgid "New ticket state"
+msgstr "Новое состояние тикета"
+
+msgid "Add field"
+msgstr "Добавить поле"
+
+msgid "Checking fields (reject update if true)"
+msgstr "Проверяемые поля (отклонить обновление если истина)"
+
+msgid "Field"
+msgstr "Поле"
+
+msgid "Operation"
+msgstr "Операция"
+
+msgid "Value"
+msgstr "Значение"
+
+msgid "Old value"
+msgstr "Старое значение"
+
+msgid "IGNORE THIS FIELD?"
+msgstr "ИГНОРИРОВАТЬ ЭТО ПОЛЕ?"
+
+msgid "DELETE FIELD?"
+msgstr "УДАЛИТЬ ПОЛЕ?"
+
+msgid "ERROR: Restriction <%1>, bad fields: [%2]"
+msgstr "ОШИБКА: Ограничение <%1>, несовпавшие поля: [%2]"
+
+msgid "ERROR: unknown error in RejectUpdate module. Contact your RT administrator. Message: %1"
+msgstr "ОШИБКА: неизвестная ошибка в модуле RejectUpdate. Обратитесь к своему администратору RT. Сообщение: %1"
+
+#
+# Fields
+#
+
+msgid "Ticket.Subject"
+msgstr "Тикет.Тема"
+
+msgid "Ticket.Status"
+msgstr "Тикет.Статус"
+
+msgid "Ticket.Owner"
+msgstr "Тикет.Ответственный"
+
+msgid "Ticket.Priority"
+msgstr "Тикет.Приоритет"
+
+msgid "Ticket.InitialPriority"
+msgstr "Тикет.Начальный приоритет"
+
+msgid "Ticket.FinalPriority"
+msgstr "Тикет.Конечный приоритет"
+
+msgid "Ticket.TimeEstimated"
+msgstr "Тикет.Расчётное время"
+
+msgid "Ticket.TimeWorked"
+msgstr "Тикет.Время в работе"
+
+msgid "Ticket.TimeLeft"
+msgstr "Тикет.Осталось времени"
+
+msgid "Ticket.Queue"
+msgstr "Тикет.Очередь"
+
+msgid "Transaction.Attach"
+msgstr "Транзакция.Вложение"
+
+msgid "Transaction.Content"
+msgstr "Транзакция.Содержимое"
+
+msgid "Transaction.Worked"
+msgstr "Транзакция.В работе"
+
+msgid "Transaction.Subject"
+msgstr "Транзакция.Тема"
+
+msgid "Transaction.One-time-CC"
+msgstr "Транзакция.Однократная копия"
+
+msgid "Transaction.One-time-Bcc"
+msgstr "Транзакция.Однократная скрытая копия"
+
+msgid "Transaction.Sign"
+msgstr "Транзакция.Цифровая подпись"
+
+msgid "Transaction.Encrypt"
+msgstr "Транзакция.Зашифровать"
+
+msgid "Transaction.Type"
+msgstr "Транзакция.Тип"
+
+#
+# Other
+#
+msgid "equal"
+msgstr "равно"
+
+msgid "not equal"
+msgstr "не равно"
+
+msgid "match regex"
+msgstr "соответствует рег. выр."
+
+msgid "not match regex"
+msgstr "не соответствует рег. выр."
