@@ -11,7 +11,7 @@ if (ref($errors) ne "ARRAY") {
 	$$skip_update = 1;
 	push @$results, loc('ERROR: unknown error in RejectUpdate module. Contact your RT administrator. Message: [_1]', $errors);
 
-} else (@$errors) {
+} elsif (@$errors) {
 	$$skip_update = 1;
 	foreach (@$errors) {
 		push @$results, 
