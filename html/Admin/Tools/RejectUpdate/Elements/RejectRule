@@ -4,7 +4,7 @@
 %   operations => $filling->{'operations'}
 %  };
 %
-<&| /Widgets/TitleBox,title => loc('Reject rule'), class=>'reject-rule', 'rolledup'=>0 &>
+<&| /Widgets/TitleBox,title => loc('Rule'), class=>'reject-rule', 'rolledup'=>0 &>
 
     <div class="elgrp">
 %   $val = (exists $data->{'rulename'}) ? $data->{'rulename'} : '';
