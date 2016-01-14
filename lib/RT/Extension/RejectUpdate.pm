@@ -11,6 +11,77 @@ use Data::Dumper qw(Dumper);
 our $VERSION = '0.1';
 our $PACKAGE = __PACKAGE__;
 
+=head1 NAME
+
+RT::Extension::RejectUpdate - Rejects page update while updating ticket based on fields value
+
+=head1 DESCRIPTION
+
+Just after user click on Update Ticket button (or Save Changes) the extension
+validate ticket and transaction fields value according on preconfigured rules.
+If some rules are match then user will stay on the same page and error message
+will point which matching fields list. If no rules was match then ticket update
+will not be interrupted.
+
+=head1 INSTALLATION
+
+=over
+
+=item C<perl Makefile.PL>
+
+=item C<make>
+
+=item C<make install>
+
+May need root permissions
+
+=item Edit your RT_SiteConfig.pm
+
+If you are using RT 4.2 or greater, add this line:
+
+    Plugin('RT::Extension::RejectUpdate');
+
+For RT 3.8 and 4.0, add this line:
+
+    Set(@Plugins, qw(RT::Extension::RejectUpdate));
+
+or add C<RT::Extension::RejectUpdate> to your existing C<@Plugins> line.
+
+=item Restart your webserver
+
+=back
+
+=head1 CONFIGURATION
+
+See README.md
+
+=head1 AUTHOR
+
+Igor Derkach, E<lt>gosha753951@gmail.comE<gt>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2015 Igor Derkach, E<lt>https://github.com/bdragon300/E<gt>
+
+This program is free software; you can redistribute it and/or modify it under
+the same terms as Perl itself.
+
+Request Tracker (RT) is Copyright Best Practical Solutions, LLC.
+
+
+=cut
+
+=head1 ATTRIBUTES
+
+=head2 $available_fields
+
+Hash that describes available fields (besides CustomFields) that can be set by
+user in "old state" and "checking fields" sections in configuration. 
+<Displaying name> => <%ARGS key> 
+Some of these fields are building dynamically such as Transaction.Type
+
+=cut
+
 #loc_left_pair
 our $available_fields = {
     'Ticket.Subject'                => 'Subject',
@@ -35,12 +106,31 @@ our $available_fields = {
     'Transaction.Type'              => '__Dynamic__'
 };
 
-# Empty value in ARGS in that fields means that user did not touch them
+
+=head2 $empty_is_unchanged_fields
+
+This attribute exists because some RT feature. Some fields listed in this
+attribute has Unchanged (i.e. empty) value on web page. So %ARGS entry has empty
+value. Fields listed in the attribute will be filled by old value if empty value
+will come from web page. 
+<Displaying name> => <%ARGS key>
+
+=cut
+
 #loc_left_pair
 our $empty_is_unchanged_fields = {
     'Ticket.OwnerId'                => 'Owner',
     'Ticket.Status'                 => 'Status'
 };
+
+
+=head2 $available_ops
+
+Operations available while testing ticket/transaction fields
+<Displaying name> => <callback>
+Callback receives two params, each can be ARRAY or SCALAR
+
+=cut
 
 #loc_left_pair
 our $available_ops = {
@@ -50,7 +140,15 @@ our $available_ops = {
     'not match regex'   => sub { (ref($_[0]) eq 'ARRAY') ? int( ! grep(/$_[1]/, @{$_[0]})) : int($_[0] !~ /$_[1]/); },
 };
 
-# 'Config value' => 'Display text'
+
+=head2 $available_ops
+
+Aggregation types for "new ticket state" and "checking fields" lists
+<Displaying/config value> => <callback>
+Callback receives hashref, returning value if check_txn_fields()
+
+=cut
+
 #loc_left_pair
 our $aggreg_types = {
     'AND' => sub { 
@@ -60,6 +158,27 @@ our $aggreg_types = {
         int( !! @{$_[0]->{'match'}});
     }
 };
+
+
+=head1 METHODS
+
+=head2 get_fields_list
+
+Builds full fields list available for checking ($available_fields + CF.*)
+
+Receives
+
+None
+
+Returns 
+
+=over
+
+=item HASHREF {<Displaying name> => <%ARGS key/CF id>}
+
+=back
+
+=cut
 
 sub get_fields_list {
     my $res = {%$available_fields};
@@ -72,6 +191,31 @@ sub get_fields_list {
 
     return $res;
 }
+
+
+=head2 fill_ticket_fields
+
+Fills Ticket.* fields by actual values from ticket, "old ticket state"
+
+Receives
+
+=over
+
+=item FIELDS full fields list
+
+=item TICKET ticket obj
+
+=back
+
+Returns
+
+=over
+
+=item HASHREF {<Displaying name> => <value>}. <value> can be scalar or array
+
+=back
+
+=cut
 
 sub fill_ticket_fields {
     my $fields = shift;
@@ -102,6 +246,36 @@ sub fill_ticket_fields {
     }
     return $res;
 }
+
+
+=head2 fill_txn_fields
+
+Fills all fields by new value - "new state". Fills $empty_is_unchanged_fields by
+new values. Fills some dynamic fields, such as Transaction.Type
+
+Receives
+
+=over
+
+=item FIELDS full fields list
+
+=item TICKET ticket obj
+
+=item ARGSREF $ARGSRef hash from mason
+
+=item CALLBACK_NAME that initiate check (Modify, ModifyAll, Update)
+
+=back
+
+Returns
+
+=over
+
+=item HASHREF {<Displaying name> => <value>}. <value> can be scalar or array
+
+=back
+
+=cut
 
 sub fill_txn_fields {
     # Returns $available_fields with filled values that sended by user
@@ -158,6 +332,27 @@ sub fill_txn_fields {
     return $res;
 }
 
+
+=head2 load_config
+
+Reads extension config from database
+
+Receives
+
+None
+
+Returns
+
+=over
+
+=item HASHREF config
+
+=item (undef) if config does not exist
+
+=back
+
+=cut
+
 sub load_config {
     my $attrs = RT::Attributes->new( $RT::SystemUser );
     $attrs->LimitToObject($RT::System);
@@ -172,6 +367,30 @@ sub load_config {
     }
     return (undef);
 }
+
+
+=head2 write_config
+
+Writes config to the database as RT::Attribute entry. Deletes duplicate entries
+if necessary
+
+Receives
+
+=over
+
+=item CONFIG
+
+=back
+
+Returns
+
+=over
+
+=item SCALAR
+
+=back
+
+=cut
 
 sub write_config {
     my $config = shift;
@@ -205,6 +424,33 @@ sub write_config {
     return $new_cfg->SetContent($config);
 }
 
+
+=head2 check_ticket
+
+Main function that calls from Mason callbacks. Initiate check of current ticket.
+
+Receives
+
+=over
+
+=item TICKET ticket obj
+
+=item ARGSREF $ARGSRef hash
+
+=item CALLBACK_NAME that initiate check (Modify, ModifyAll, Update)
+
+=back
+
+Returns
+
+=over
+
+=item ARRAY What fields in what rules matched. [{name => <rule_name>, fields => ARRAYRef}].
+
+=back
+
+=cut
+
 sub check_ticket {
 
     my $ticket = shift;
@@ -219,9 +465,7 @@ sub check_ticket {
     my $fields = get_fields_list;
     my $txn_values = fill_txn_fields($fields, $ticket, $ARGSRef, $callback_name);
     my $ticket_values = fill_ticket_fields($fields, $ticket);
-RT::Logger->debug(Dumper $txn_values);
-RT::Logger->debug(Dumper $ticket_values);
-RT::Logger->debug(Dumper $config);
+
     foreach my $rule (@{$config}) {
         next unless ($rule->{'enabled'});
 
@@ -283,6 +527,32 @@ RT::Logger->debug(Dumper $config);
     return $errors;
 }
 
+
+=head2 check_txn_fields
+
+Checks for matching fields "new ticket state" with config values in specified rule
+
+Receives
+
+=over
+
+=item TXN_FIELDS "new state" fields value
+
+=item CONF_FIELDS config fields
+
+=back
+
+Returns
+
+=over
+
+=item HASH {match => ARRAYREF, mismatch => ARRAYREF, undef => ARRAYREF}. 
+undef - field is present in CONF_FIELDS but not in TXN_FIELDS
+
+=back
+
+=cut
+
 sub check_txn_fields {
     my $txn_fields = shift;
     my $conf_fields = shift;
@@ -320,6 +590,31 @@ sub check_txn_fields {
 
     return $res;
 }
+
+
+=head2 find_ticket
+
+Checks whether ticket matches TicketSQL - "old ticket state"
+
+Receives
+
+=over
+
+=item TICKET ticket obj
+
+=item SQL
+
+=back
+
+Returns
+
+=over
+
+=item SCALAR
+
+=back
+
+=cut
 
 sub find_ticket {
     my $ticket = shift;
