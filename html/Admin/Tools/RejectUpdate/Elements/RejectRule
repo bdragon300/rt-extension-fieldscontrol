@@ -16,7 +16,7 @@
         <div class="el">
             <span class="label">&nbsp;</span>
             <input id="enabled" name="enabled" class="checkbox" type="checkbox" <% $val ? 'checked' : '' %>>
-            <label for="enabled">Enabled</label>
+            <label for="enabled"><&|/l&>Enabled</&></label>
         </div>
     </div>
 

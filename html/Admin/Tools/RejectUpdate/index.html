@@ -28,7 +28,7 @@ while (defined($config->[$i])) {
             $i,
             $config->[$i]->{'rulename'},
             (join ', ', map {loc($_->{'field'})} @{$config->[$i]->{'rfields'}}),
-            ($config->[$i]->{'enabled'} ? 'Enabled' : 'Disabled') #loc
+            ($config->[$i]->{'enabled'} ? loc('Enabled') : loc('Disabled')) #loc
         ],
     };
     $i++;
