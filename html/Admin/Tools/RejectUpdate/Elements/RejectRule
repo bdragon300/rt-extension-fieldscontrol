@@ -4,12 +4,12 @@
 %   operations => $filling->{'operations'}
 %  };
 %
-<&| /Widgets/TitleBox,title => 'Reject Rule', class=>'reject-rule', 'rolledup'=>0 &>
+<&| /Widgets/TitleBox,title => loc('Reject rule'), class=>'reject-rule', 'rolledup'=>0 &>
 
     <div class="elgrp">
 %   $val = (exists $data->{'rulename'}) ? $data->{'rulename'} : '';
         <div class="el">
-            <span class="label">Rule name</span>
+            <span class="label"><&|/l&>Rule name</&></span>
             <input type="text" name="name" value="<% $val %>" />
         </div>
 %   $val = (exists $data->{'enabled'}) ? $data->{'enabled'} : 1;
@@ -24,7 +24,7 @@
 %       $val = (exists $data->{'searchsql'}) ? $data->{'searchsql'}: '';
         <div class="el">
             <fieldset>
-                <legend>Old ticket state</legend>
+                <legend><&|/l&>Old ticket state</&></legend>
                 <div class="el">
                     <textarea cols="40" rows="6" name="searchsql" placeholder="Ticket SQL"><% $val %></textarea>
                 </div>
@@ -34,13 +34,13 @@
 %       $val = (exists $data->{'sfieldsaggreg'}) ? $data->{'sfieldsaggreg'} : (keys %$aggreg_types)[0];
         <div class="el sfields-list field-list">
             <fieldset>
-                <legend>New ticket state</legend>
+                <legend><&|/l&>New ticket state</&></legend>
 
                 <div class="ctlgrp">
 %                   foreach my $agtype (sort keys %$aggreg_types) {
                         <div>
                             <input type="radio" name="<% join('-', ('sfields', 'aggreg')) %>" id="<% join('-', ('sfields', 'aggreg', $agtype)) %>" value= "<% $agtype %>" <% ($agtype eq $val) ? 'checked' : '' %>/>
-                            <label for="<% join('-', ('sfields' ,'aggreg', $agtype)) %>"><% $agtype %></label>
+                            <label for="<% join('-', ('sfields' ,'aggreg', $agtype)) %>"><% loc($agtype) %></label>
                         </div>
 %                   }
                 </div>
@@ -64,7 +64,7 @@
                 </div>
 
                 <div class="elgrp">
-                    <input class="add-field button" type="button" value="Add condition" id="add-sfields" />
+                    <input class="add-field button" type="button" value="<&|/l&>Add field</&>" id="add-sfields" />
                 </div>
 
             </fieldset>
@@ -76,14 +76,14 @@
     <div class="elgrp">
         <div class="el rfields-list field-list">
             <fieldset>
-                <legend>Check new ticket state (reject if true)</legend>
+                <legend><&|/l&>Checking fields (reject update if true)</&></legend>
 
                 <div class="ctlgrp">
 %               $val = (exists $data->{'rfieldsaggreg'}) ? $data->{'rfieldsaggreg'} : (keys %$aggreg_types)[0];
 %               foreach my $agtype (sort keys %$aggreg_types) {
                     <div>
                         <input type="radio" name="<% join('-', ('rfields', 'aggreg')) %>" id="<% join('-', ('rfields', 'aggreg', $agtype)) %>" value= "<% $agtype %>" <% ($agtype eq $val) ? 'checked' : '' %> />
-                        <label for="<% join('-', ('rfields', 'aggreg', $agtype)) %>"><% $agtype %></label>
+                        <label for="<% join('-', ('rfields', 'aggreg', $agtype)) %>"><% loc($agtype) %></label>
                     </div>
 %               }
                 </div>
@@ -110,7 +110,7 @@
                 </div>
 
                 <div class="elgrp">
-                    <input class="add-field button" type="button" value="Add field" id="add-rfields" />
+                    <input class="add-field button" type="button" value="<&|/l&>Add field</&>" id="add-rfields" />
                 </div>
 
             </fieldset>

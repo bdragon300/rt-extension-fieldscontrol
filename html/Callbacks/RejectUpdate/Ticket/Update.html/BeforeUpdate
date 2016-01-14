@@ -7,8 +7,18 @@ $results => []
 
 <%init>
 my $errors = RT::Extension::RejectUpdate::check_ticket($TicketObj, $ARGSRef, 'Update');
-if (@$errors) {
+if (ref($errors) ne "ARRAY") {
 	$$skip_update = 1;
-	push @$results, @$errors;
+	push @$results, loc('ERROR: unknown error in RejectUpdate module. Contact your RT administrator. Message: [_1]', $errors);
+
+} elsif (@$errors) {
+	$$skip_update = 1;
+	foreach (@$errors) {
+		push @$results, 
+			loc("ERROR: Restriction <[_1]>, bad fields: ~[[_2]~]",
+				$_->{'name'},
+				join ',', map { loc($_) } @{$_->{'fields'}}
+			);
+	}
 }
 </%init>

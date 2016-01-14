@@ -11,6 +11,7 @@ use Data::Dumper qw(Dumper);
 our $VERSION = '0.1';
 our $PACKAGE = __PACKAGE__;
 
+#loc_left_pair
 our $available_fields = {
     'Ticket.Subject'                => 'Subject',
     'Ticket.Status'                 => 'Status',
@@ -21,7 +22,7 @@ our $available_fields = {
     'Ticket.TimeEstimated'          => 'TimeEstimated',
     'Ticket.TimeWorked'             => 'TimeWorked',
     'Ticket.TimeLeft'               => 'TimeLeft',
-    'Ticket.Queue'                  => 'Queue',
+    'Ticket.Queue'                  => 'Queue', #FIXME: queue id, not name
     'Transaction.Attach'            => 'Attach',
     'Transaction.Content'           => 'Content',
     'Transaction.Worked'            => 'UpdateTimeWorked',
@@ -35,11 +36,13 @@ our $available_fields = {
 };
 
 # Empty value in ARGS in that fields means that user did not touch them
+#loc_left_pair
 our $empty_is_unchanged_fields = {
     'Ticket.Owner'                  => 'Owner',
     'Ticket.Status'                 => 'Status'
 };
 
+#loc_left_pair
 our $available_ops = {
     'equal'             => sub { (ref($_[0]) eq 'ARRAY') ? int(grep(/^$_[1]$/, @{$_[0]}))  : int($_[0] eq $_[1]); },
     'not equal'         => sub { (ref($_[0]) eq 'ARRAY') ? int( ! grep(/^$_[1]$/, @{$_[0]})) : int($_[0] ne $_[1]); },
@@ -48,6 +51,7 @@ our $available_ops = {
 };
 
 # 'Config value' => 'Display text'
+#loc_left_pair
 our $aggreg_types = {
     'AND' => sub { 
         int( !! @{$_[0]->{'match'}} && ! @{$_[0]->{'mismatch'}});
@@ -266,11 +270,14 @@ sub check_ticket {
 
         my $rule_name = $rule->{'rulename'};
         if ($aggreg_res == 1) {
-            push(@$errors, "ERROR: Restriction <$rule_name>, bad fields: [" 
-                . join(', ', @{$matches->{'match'}}) 
-                . ']');
+            push @$errors,
+                {
+                    name => $rule_name,
+                    fields => [@{$matches->{'match'}}]
+                };
         }
     }
+
     return $errors;
 }
 
