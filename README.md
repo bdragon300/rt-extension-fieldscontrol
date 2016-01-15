@@ -54,3 +54,16 @@ Each rule will be checked by following algorithm:
 "New ticket state" and "Checking fields" has AND/OR switch that has following meaning:
 * AND - when ALL fields match
 * OR - when ANY field match
+
+# Special fields
+
+## Transaction.Type
+
+Identifies on what page user is. Can have following values:
+
+* Comment, Update, Status - Comment;
+* Correspond, Update, Reply, Status - Correspond;
+* Set, Basics, Modify, CustomField, Status - Basics page;
+* Jumbo, ModifyAll, Status - Jumbo update.
+
+Several pages can have the same Transaction.Type.
