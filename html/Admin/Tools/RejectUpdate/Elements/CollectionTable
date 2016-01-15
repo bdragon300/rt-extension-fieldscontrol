@@ -10,7 +10,7 @@
 % my $i = 0;
 % if (@$rows) {
 %   foreach my $row (@$rows) {
-        <tr class="<% ($i % 2) ? 'oddline' : 'evenline' %>">
+        <tr class="<% ($i % 2 == 0) ? 'oddline' : 'evenline' %>">
 %       if ($checkboxes) {
             <td class="collection-as-table"><input type="checkbox" name="item-" . $i></td>
 %       }
@@ -22,6 +22,7 @@
 %           }
 %       }
         </tr>
+%	$i++;
 %   }
 % }
 </table>
