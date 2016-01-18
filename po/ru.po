@@ -122,7 +122,7 @@ msgid "Ticket.Status"
 msgstr "Тикет.Статус"
 
 msgid "Ticket.OwnerId"
-msgstr "Тикет.Номер ответственного"
+msgstr "Тикет.Ответственный (ID)"
 
 msgid "Ticket.Priority"
 msgstr "Тикет.Приоритет"
@@ -143,7 +143,7 @@ msgid "Ticket.TimeLeft"
 msgstr "Тикет.Осталось времени"
 
 msgid "Ticket.QueueId"
-msgstr "Тикет.Номер очереди"
+msgstr "Тикет.Очередь (ID)"
 
 msgid "Transaction.Attach"
 msgstr "Транзакция.Вложение"
