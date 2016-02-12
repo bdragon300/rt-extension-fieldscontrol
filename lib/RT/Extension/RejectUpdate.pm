@@ -226,6 +226,10 @@ sub fill_ticket_fields {
         my $fld = $fields->{$f};
         $res->{$f} = $ticket->_Value($fld);
     }
+
+    # RT::Nobody means empty value for Ticket.OwnerId
+    $res->{'Ticket.OwnerId'} = '' if ($res->{'Ticket.OwnerId'} eq RT::Nobody->id);
+
     my $cfs = $ticket->CustomFields;
     while (my $cf = $cfs->Next) {
         my $cf_name = 'CF.' . $cf->Name;
