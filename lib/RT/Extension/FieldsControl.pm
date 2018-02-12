@@ -13,15 +13,46 @@ our $PACKAGE = __PACKAGE__;
 
 =head1 NAME
 
-RT::Extension::FieldsControl - Rejects page update while updating ticket based on fields value
+RT::Extension::FieldsControl - Conditional ticket/transaction fields validation
 
 =head1 DESCRIPTION
 
-Just after user click on Update Ticket button (or Save Changes) the extension
-validate ticket and transaction fields value according on preconfigured rules.
-If some rules are match then user will stay on the same page and error message
-will point which matching fields list. If no rules was match then ticket update
-will not be interrupted.
+This extension validates ticket and transaction fields on each ticket update 
+according on preconfigured rules.
+
+Each validation rule can be applied only to certain tickets using TicketSQL 
+selection and/or incoming fields value tests. In applicable rules the incoming 
+fields value verifies using control tests. If control tests at least in one 
+rule have failed then ticket update aborts and failed rules appears in error 
+message (with optional comments).
+
+Incoming fields value can be tested against to string, regular expression or 
+current field value.
+
+Thus you have flexible method to control the moving of certain tickets from one 
+"state" to another.
+
+Some examples:
+
+=over
+
+=item * make required fields only for certain tickets (e.g. deny close incident 
+(ticket in "support" queue with CF.{InteractionType}="Incident") with empty CF.{IncidentReason})
+
+=item * lock "Client" custom role after initial set for all users, only 
+management or admins can change them
+
+=item * deny Correspond via web interface in closed tickets
+
+=item * deny simultaneous change CF.{InteractionType} and CF.{GenerateInvoice}. 
+Useful when you have "trigger" CF (CF.{GenerateInvoice}) and appropriate Action 
+(generate invoice depending on InteractionType). Reason is that RT does not 
+guarantee the executing transactions in certain order, so you can get either 
+old or new CF.{InteractionType} value when Action executed.
+
+=back
+
+The extension has configuration UI available for users with SuperUser right.
 
 =head1 INSTALLATION
 
@@ -47,13 +78,9 @@ For RT 3.8 and 4.0, add this line:
 
 or add C<RT::Extension::FieldsControl> to your existing C<@Plugins> line.
 
-=item Restart your webserver
+=item After installing you may need to clear Mason cache and restart webserver.
 
 =back
-
-=head1 CONFIGURATION
-
-See README.md
 
 =head1 AUTHOR
 
@@ -75,10 +102,10 @@ Request Tracker (RT) is Copyright Best Practical Solutions, LLC.
 
 =head2 $available_fields
 
-Hash that describes available fields (besides CustomFields) that can be set by
-user in "old state" and "checking fields" sections in configuration. 
+Hash describes ticket and transaction fields (besides CustomFields) which user
+can set on the update pages.
 <Displaying name> => <%ARGS key> 
-Some of these fields are building dynamically such as Transaction.Type
+Some of these fields are set dynamically, e.g. Transaction.Type
 
 =cut
 
@@ -111,8 +138,7 @@ our $available_fields = {
 
 This attribute exists because some RT feature. Some fields listed in this
 attribute has Unchanged (i.e. empty) value on web page. So %ARGS entry has empty
-value. Fields listed in the attribute will be filled by old value if empty value
-will come from web page. 
+value. These fields filled by old value if empty value will come from web page. 
 <Displaying name> => <%ARGS key>
 
 =cut
@@ -141,9 +167,9 @@ our $available_ops = {
 };
 
 
-=head2 $available_ops
+=head2 $aggreg_types
 
-Aggregation types for "new ticket state" and "checking fields" lists
+Aggregation types incoming data tests
 <Displaying/config value> => <callback>
 Callback receives hashref, returning value if check_txn_fields()
 
@@ -162,19 +188,19 @@ our $aggreg_types = {
 
 =head1 METHODS
 
-=head2 get_fields_list
+=head2 get_fields_list() -> \%fields
 
-Builds full fields list available for checking ($available_fields + CF.*)
+Build full fields list available in tests ($available_fields + CF.*)
 
-Receives
+Parameters:
 
 None
 
-Returns 
+Returns:
 
 =over
 
-=item HASHREF {<Displaying name> => <%ARGS key/CF id>}
+=item HASHREF {<Displaying name> => <%ARGS key or CF id>}
 
 =back
 
@@ -193,21 +219,21 @@ sub get_fields_list {
 }
 
 
-=head2 fill_ticket_fields
+=head2 fill_ticket_fields(\%fields, $ticket) -> \%filled_fields
 
-Fills Ticket.* fields by actual values from ticket, "old ticket state"
+Fill 'Ticket.*' keys part in given fields with current ticket values
 
-Receives
+Parameters:
 
 =over
 
-=item FIELDS full fields list
+=item fields -- full fields list
 
-=item TICKET ticket obj
+=item ticket -- ticket obj
 
 =back
 
-Returns
+Returns:
 
 =over
 
@@ -252,26 +278,27 @@ sub fill_ticket_fields {
 }
 
 
-=head2 fill_txn_fields
+=head2 fill_txn_fields(\%fields, $ticket, \%ARGSRef, $callback_name) -> \%filled_fields
 
-Fills all fields by new value - "new state". Fills $empty_is_unchanged_fields by
-new values. Fills some dynamic fields, such as Transaction.Type
+Fill 'Transaction.*', 'CF.*' keys part in given fields with current 
+txn/ticket values. Also correct values using $empty_is_unchanged_fields attr.
+Also fill dynamic fields ('__Dynamic__').
 
-Receives
+Parameters:
 
 =over
 
-=item FIELDS full fields list
+=item fields -- full fields list
 
-=item TICKET ticket obj
+=item ticket -- ticket obj
 
-=item ARGSREF $ARGSRef hash from mason
+=item ARGSRef -- $ARGSRef hash from Mason with POST form data
 
-=item CALLBACK_NAME that initiate check (Modify, ModifyAll, Update)
+=item callback_name -- page causes the update, comes from Mason callback
 
 =back
 
-Returns
+Returns:
 
 =over
 
@@ -337,15 +364,15 @@ sub fill_txn_fields {
 }
 
 
-=head2 load_config
+=head2 load_config() -> \%config
 
-Reads extension config from database
+Load configuration
 
-Receives
+Parameters:
 
 None
 
-Returns
+Returns:
 
 =over
 
@@ -373,24 +400,23 @@ sub load_config {
 }
 
 
-=head2 write_config
+=head2 write_config(\%config)
 
-Writes config to the database as RT::Attribute entry. Deletes duplicate entries
-if necessary
+Write configuration. Delete duplicates if necessary
 
-Receives
+Parameters:
 
 =over
 
-=item CONFIG
+=item config -- configuration HASHREF
 
 =back
 
-Returns
+Returns:
 
 =over
 
-=item SCALAR
+=item (1, 'Status message') on success and (0, 'Error Message') on failure
 
 =back
 
@@ -429,27 +455,29 @@ sub write_config {
 }
 
 
-=head2 check_ticket
+=head2 check_ticket($ticket, $ARGSRef, $callback_name) -> \@errors
 
-Main function that calls from Mason callbacks. Initiate check of current ticket.
+Check given ticket across all rules. This is main function called from Mason 
+callbacks when it triggered.
 
-Receives
+Parameters:
 
 =over
 
-=item TICKET ticket obj
+=item ticket -- ticket obj
 
-=item ARGSREF $ARGSRef hash
+=item ARGSRef -- $ARGSRef hash from Mason with POST form data
 
-=item CALLBACK_NAME that initiate check (Modify, ModifyAll, Update)
+=item callback_name -- page causes the update, comes from Mason callback
 
 =back
 
-Returns
+Returns:
 
 =over
 
-=item ARRAY What fields in what rules matched. [{name => <rule_name>, fields => ARRAYRef}].
+=item ARRAY -- Failed rules and fields which caused failure. 
+[{name => <rule_name>, fields => ARRAYRef}, ...].
 
 =back
 
@@ -532,26 +560,27 @@ sub check_ticket {
 }
 
 
-=head2 check_txn_fields
+=head2 check_txn_fields(\%txn_fields, \@conf_fields) -> \%result_structure
 
-Checks for matching fields "new ticket state" with config values in specified rule
+Incoming data testing machinery function. 
 
-Receives
+Parameters:
 
 =over
 
-=item TXN_FIELDS "new state" fields value
+=item txn_fields -- incoming fields
 
-=item CONF_FIELDS config fields
+=item conf_fields -- tests from config
 
 =back
 
-Returns
+Returns:
 
 =over
 
-=item HASH {match => ARRAYREF, mismatch => ARRAYREF, undef => ARRAYREF}. 
-undef - field is present in CONF_FIELDS but not in TXN_FIELDS
+=item HASHREF 
+{match => ARRAYREF, mismatch => ARRAYREF, undef => ARRAYREF}. undef contains 
+fields present in conf_fields, but not in txn_fields
 
 =back
 
@@ -596,25 +625,17 @@ sub check_txn_fields {
 }
 
 
-=head2 find_ticket
+=head2 find_ticket($ticket, $sql) -> 1|0
 
-Checks whether ticket matches TicketSQL - "old ticket state"
+Check whether given ticket satisfied to given TicketSQL
 
-Receives
-
-=over
-
-=item TICKET ticket obj
-
-=item SQL
-
-=back
-
-Returns
+Parameters:
 
 =over
 
-=item SCALAR
+=item ticket -- ticket obj
+
+=item sql -- TicketSQL expression
 
 =back
 
@@ -640,3 +661,4 @@ sub find_ticket {
     return 1;
 }
 
+1;
