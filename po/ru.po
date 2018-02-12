@@ -8,8 +8,8 @@ msgstr ""
 #index.html
 #
 
-msgid "RejectUpdate configuration"
-msgstr "Конфигурация RejectUpdate"
+msgid "FieldsControl configuration"
+msgstr "Конфигурация FieldsControl"
 
 msgid "Name"
 msgstr "Имя"
@@ -108,8 +108,8 @@ msgstr "УДАЛИТЬ ПОЛЕ?"
 msgid "ERROR: Restriction <%1>, bad fields: [%2]"
 msgstr "ОШИБКА: Ограничение <%1>, несовпавшие поля: [%2]"
 
-msgid "ERROR: unknown error in RejectUpdate module. Contact your RT administrator. Message: %1"
-msgstr "ОШИБКА: неизвестная ошибка в модуле RejectUpdate. Обратитесь к своему администратору RT. Сообщение: %1"
+msgid "ERROR: unknown error in FieldsControl module. Contact your RT administrator. Message: %1"
+msgstr "ОШИБКА: неизвестная ошибка в модуле FieldsControl. Обратитесь к своему администратору RT. Сообщение: %1"
 
 #
 # Fields

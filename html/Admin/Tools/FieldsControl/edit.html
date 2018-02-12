@@ -30,7 +30,7 @@
     }
 </style>
 
-<form action="/Admin/Tools/RejectUpdate/edit.html?id=<% $id %>&Create=<% $Create %>" method="post">
+<form action="/Admin/Tools/FieldsControl/edit.html?id=<% $id %>&Create=<% $Create %>" method="post">
     <& Elements/RejectRule, filling => $filling, data => $rule, aggreg_types => \%aggreg_types &>
     <& /Elements/Submit, Name => 'submit', Label => loc('Save Changes') &>
 %   if ($Create == 0) {
@@ -46,7 +46,7 @@ unless ($session{'CurrentUser'}->HasRight( Object=> $RT::System, Right => 'Super
     Abort(loc('This feature is only available to system administrators'));
 }
 
-my $config = RT::Extension::RejectUpdate::load_config;
+my $config = RT::Extension::FieldsControl::load_config;
 my @results;
 my $rule = {};
 
@@ -62,9 +62,9 @@ unless ($Create) {
 }
 
 
-my @ops = sort keys %${RT::Extension::RejectUpdate::available_ops};
-my @fields_list = sort keys %{RT::Extension::RejectUpdate::get_fields_list()};
-my %aggreg_types = %${RT::Extension::RejectUpdate::aggreg_types};
+my @ops = sort keys %${RT::Extension::FieldsControl::available_ops};
+my @fields_list = sort keys %{RT::Extension::FieldsControl::get_fields_list()};
+my %aggreg_types = %${RT::Extension::FieldsControl::aggreg_types};
 my $filling = {
     fields => \@fields_list,
     operations => \@ops
@@ -73,7 +73,7 @@ my $filling = {
 
 if ($ARGS{'remove'}) {
     splice(@$config, $id, 1);
-    my ($res, $msg) = RT::Extension::RejectUpdate::write_config($config);
+    my ($res, $msg) = RT::Extension::FieldsControl::write_config($config);
     if ($res) {
         push @results, loc('Rule #[_1] removed', $id);
     } else {
@@ -81,7 +81,7 @@ if ($ARGS{'remove'}) {
     }
     MaybeRedirectForResults(
         Actions   => \@results,
-        Path      => "/Admin/Tools/RejectUpdate"
+        Path      => "/Admin/Tools/FieldsControl"
     );
 }
 
@@ -161,7 +161,7 @@ if ($ARGS{'submit'}) {
     unless (@results) {
         $id = scalar(@$config) if ($Create); 
         $config->[$id] = {%$rule};
-        my ($res, $msg) = RT::Extension::RejectUpdate::write_config($config);
+        my ($res, $msg) = RT::Extension::FieldsControl::write_config($config);
         if ($res) {
             push @results, loc('Configuration saved');
         } else {
@@ -170,7 +170,7 @@ if ($ARGS{'submit'}) {
 
         MaybeRedirectForResults(
             Actions   => \@results,
-            Path      => "/Admin/Tools/RejectUpdate"
+            Path      => "/Admin/Tools/FieldsControl"
         );
     }
 

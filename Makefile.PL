@@ -1,6 +1,6 @@
 use inc::Module::Install;
 
-RTx 'RT-Extension-RejectUpdate';
+RTx 'RT-Extension-FieldsControl';
 license 'perl';
 author 'Igor Derkach <gosha753951@gmail.com>';
 version '0.1';

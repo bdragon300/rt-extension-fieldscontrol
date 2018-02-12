@@ -6,10 +6,10 @@ $results => []
 </%args>
 
 <%init>
-my $errors = RT::Extension::RejectUpdate::check_ticket($TicketObj, $ARGSRef, 'Modify');
+my $errors = RT::Extension::FieldsControl::check_ticket($TicketObj, $ARGSRef, 'ModifyAll');
 if (ref($errors) ne "ARRAY") {
 	$$skip_update = 1;
-	push @$results, loc('ERROR: unknown error in RejectUpdate module. Contact your RT administrator. Message: [_1]', $errors);
+	push @$results, loc('ERROR: unknown error in FieldsControl module. Contact your RT administrator. Message: [_1]', $errors);
 
 } elsif (@$errors) {
 	$$skip_update = 1;

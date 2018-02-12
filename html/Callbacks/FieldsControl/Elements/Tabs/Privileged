@@ -5,25 +5,25 @@ if ( $session{'CurrentUser'}->HasRight( Right => 'ShowConfigTab', Object => RT->
     my $tools_menu = $admin_menu->child('tools') if $admin_menu;
     if ($tools_menu) {
         $tools_menu->child(reject_update => 
-            title       => loc('Reject Update'),
+            title       => loc('Fields Control'),
             description => loc('Configure ticket rejection'),
-            path        => '/Admin/Tools/RejectUpdate',
+            path        => '/Admin/Tools/FieldsControl',
         );
     }
 
     my $page_menu = PageMenu();
     if ($page_menu
-        && $m->request_comp()->path =~ '^/Admin/Tools/RejectUpdate/.*') 
+        && $m->request_comp()->path =~ '^/Admin/Tools/FieldsControl/.*') 
     {
         $page_menu->child(select => 
             title       => loc('Select'),
-            description => 'RejectUpdate rule list',
-            path        => '/Admin/Tools/RejectUpdate'
+            description => 'FieldsControl rule list',
+            path        => '/Admin/Tools/FieldsControl'
         );
         $page_menu->child(create => 
             title       => loc('Create'),
-            description => 'Create new RejectUpdate rule',
-            path        => '/Admin/Tools/RejectUpdate/edit.html?Create=1'
+            description => 'Create new FieldsControl rule',
+            path        => '/Admin/Tools/FieldsControl/edit.html?Create=1'
         );
     }
 }

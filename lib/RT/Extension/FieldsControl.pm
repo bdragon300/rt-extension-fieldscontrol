@@ -1,4 +1,4 @@
-package RT::Extension::RejectUpdate;
+package RT::Extension::FieldsControl;
 
 use 5.010;
 use strict;
@@ -13,7 +13,7 @@ our $PACKAGE = __PACKAGE__;
 
 =head1 NAME
 
-RT::Extension::RejectUpdate - Rejects page update while updating ticket based on fields value
+RT::Extension::FieldsControl - Rejects page update while updating ticket based on fields value
 
 =head1 DESCRIPTION
 
@@ -39,13 +39,13 @@ May need root permissions
 
 If you are using RT 4.2 or greater, add this line:
 
-    Plugin('RT::Extension::RejectUpdate');
+    Plugin('RT::Extension::FieldsControl');
 
 For RT 3.8 and 4.0, add this line:
 
-    Set(@Plugins, qw(RT::Extension::RejectUpdate));
+    Set(@Plugins, qw(RT::Extension::FieldsControl));
 
-or add C<RT::Extension::RejectUpdate> to your existing C<@Plugins> line.
+or add C<RT::Extension::FieldsControl> to your existing C<@Plugins> line.
 
 =item Restart your webserver
 
@@ -360,7 +360,7 @@ Returns
 sub load_config {
     my $attrs = RT::Attributes->new( $RT::SystemUser );
     $attrs->LimitToObject($RT::System);
-    $attrs->Limit(FIELD => 'Name', VALUE => 'RejectUpdateConfig');
+    $attrs->Limit(FIELD => 'Name', VALUE => 'FieldsControlConfig');
     $attrs->OrderBy(FIELD => 'id', ORDER => 'DESC');
 
     my $cfg = ($attrs->Count > 0) ? $attrs->First->Content : undef;
@@ -405,7 +405,7 @@ sub write_config {
     my $cfg = RT::Attributes->new( RT::SystemUser );
     $cfg->LimitToObject(RT::System);
     $cfg->OrderBy(FIELD => 'id', ORDER => 'DESC');
-    my @all_attrs = $cfg->Named('RejectUpdateConfig');
+    my @all_attrs = $cfg->Named('FieldsControlConfig');
     my $new_cfg = shift @all_attrs if @all_attrs;
     foreach (@all_attrs) {
         $_->Delete;
@@ -413,8 +413,8 @@ sub write_config {
     unless ($new_cfg) {
         $new_cfg = RT::Attribute->new( RT::SystemUser );
         my $res = $new_cfg->Create(
-            Name => 'RejectUpdateConfig',
-            Description => 'RT::Extension::RejectUpdate configuration',
+            Name => 'FieldsControlConfig',
+            Description => 'RT::Extension::FieldsControl configuration',
             ContentType => 'storable',
             Object => RT::System
         );

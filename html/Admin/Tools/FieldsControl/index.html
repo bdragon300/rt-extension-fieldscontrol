@@ -6,14 +6,14 @@
 <& Elements/CollectionTable, headers => $table_headers, rows => $table_rows &>
 
 <%init>
-my $title = loc('RejectUpdate configuration');
+my $title = loc('FieldsControl configuration');
 unless ($session{'CurrentUser'}->HasRight( Object=> $RT::System, Right => 'SuperUser')) {
     Abort(loc('This feature is only available to system administrators'));
 }
 
 use Data::Dumper qw(Dumper);
 
-my $config = RT::Extension::RejectUpdate::load_config;
+my $config = RT::Extension::FieldsControl::load_config;
 my @results;
 
 # Fill data for CollectionTable
@@ -23,7 +23,7 @@ my $table_headers = [loc('#'), loc('Name'), loc('Checking fields'), loc('Status'
 my $i = 0;
 while (defined($config->[$i])) {
     push @$table_rows, {
-        'link' => '/Admin/Tools/RejectUpdate/edit.html?id=' . $i,
+        'link' => '/Admin/Tools/FieldsControl/edit.html?id=' . $i,
         'cols' => [
             $i,
             $config->[$i]->{'rulename'},
