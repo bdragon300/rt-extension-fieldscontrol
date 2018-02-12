@@ -11,9 +11,6 @@ msgstr ""
 msgid "FieldsControl configuration"
 msgstr "Конфигурация FieldsControl"
 
-msgid "Name"
-msgstr "Имя"
-
 msgid "Checking fields"
 msgstr "Проверяемые поля"
 
@@ -27,14 +24,8 @@ msgstr "УДАЛИТЬ"
 msgid "Do you want to remove rule?"
 msgstr "Вы действительно хотите удалить правило?"
 
-msgid "Rule"
-msgstr "Правило"
-
-msgid "Tickets update reject rules"
-msgstr "Правила отклонения обновлений тикетов"
-
-msgid "ERROR: Invalid id"
-msgstr "ОШИБКА: Неверный id"
+msgid "FieldsControl rule"
+msgstr "Правило FieldsControl"
 
 msgid "Rule #%1 removed"
 msgstr "Правило #%1 удалено"
@@ -69,23 +60,23 @@ msgstr "Конфигурация сохранена"
 msgid "ERROR: Cannot save configuration: %1"
 msgstr "ОШИБКА: Невозможно сохранить конфигурацию: %1"
 
-#
-#RejectRule
-#
-msgid "Rule name"
-msgstr "Имя правила"
+msgid "Common"
+msgstr "Общее"
 
-msgid "Old ticket state"
-msgstr "Старое состояние тикета"
+mgsid "Applies to"
+msgstr "Применяется к"
 
-msgid "New ticket state"
-msgstr "Новое состояние тикета"
+msgid "TicketSQL selection"
+msgstr "Выборка TicketSQL"
+
+msgid "Incoming data tests"
+msgstr "Проверка входящих данных"
 
 msgid "Add field"
 msgstr "Добавить поле"
 
-msgid "Checking fields (reject update if true)"
-msgstr "Проверяемые поля (отклонить обновление если истина)"
+msgid "Fails if"
+msgstr "Неудача, если"
 
 msgid "Field"
 msgstr "Поле"
@@ -99,11 +90,11 @@ msgstr "Значение"
 msgid "Old value"
 msgstr "Старое значение"
 
-msgid "IGNORE THIS FIELD?"
-msgstr "ИГНОРИРОВАТЬ ЭТО ПОЛЕ?"
+msgid "IGNORE?"
+msgstr "ИГНОРИРОВАТЬ?"
 
-msgid "DELETE FIELD?"
-msgstr "УДАЛИТЬ ПОЛЕ?"
+msgid "DELETE?"
+msgstr "УДАЛИТЬ?"
 
 msgid "ERROR: Restriction <%1>, bad fields: [%2]"
 msgstr "ОШИБКА: Ограничение <%1>, несовпавшие поля: [%2]"
@@ -175,6 +166,10 @@ msgstr "Транзакция.Тип"
 #
 # Other
 #
+
+msgid "Name"
+msgstr "Имя"
+
 msgid "equal"
 msgstr "равно"
 

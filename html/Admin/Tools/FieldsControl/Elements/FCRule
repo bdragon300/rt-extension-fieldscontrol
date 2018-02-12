@@ -1,0 +1,133 @@
+% my $val;
+%  my $field_data = {
+%   fields => $filling->{'fields'},
+%   operations => $filling->{'operations'}
+%  };
+%
+<&| /Widgets/TitleBox,title => loc('Common'), class=>'reject-rule', 'rolledup'=>0 &>
+    <div class="elgrp">
+%   $val = (exists $data->{'rulename'}) ? $data->{'rulename'} : '';
+        <div class="el">
+            <span class="label"><&|/l&>Name</&></span>
+            <input type="text" name="name" value="<% $val %>" />
+        </div>
+%   $val = (exists $data->{'enabled'}) ? $data->{'enabled'} : 1;
+        <div class="el">
+            <span class="label">&nbsp;</span>
+            <input id="enabled" name="enabled" class="checkbox" type="checkbox" <% $val ? 'checked' : '' %>>
+            <label for="enabled"><&|/l&>Enabled</&></label>
+        </div>
+    </div>
+</&>
+
+<&| /Widgets/TitleBox,title => loc('Applies to'), class=>'reject-rule', 'rolledup'=>0 &>
+    <div class="elgrp">
+%           $val = (exists $data->{'searchsql'}) ? $data->{'searchsql'}: '';
+            <div class="el">
+                <span class="label"><&|/l&>TicketSQL selection</&></span>
+                <textarea cols="40" rows="6" name="searchsql" id="searchsql" placeholder="TicketSQL"><% $val %></textarea>
+            </div>
+
+%           $val = (exists $data->{'sfieldsaggreg'}) ? $data->{'sfieldsaggreg'} : (keys %$aggreg_types)[0];
+            <div class="el sfields-list field-list">
+                <span class="label"><&|/l&>Incoming data tests</&></span>
+                <fieldset>
+                    <div class="ctlgrp">
+%                       foreach my $agtype (sort keys %$aggreg_types) {
+                            <div>
+                                <input type="radio" name="<% join('-', ('sfields', 'aggreg')) %>" id="<% join('-', ('sfields', 'aggreg', $agtype)) %>" value= "<% $agtype %>" <% ($agtype eq $val) ? 'checked' : '' %>/>
+                                <label for="<% join('-', ('sfields' ,'aggreg', $agtype)) %>"><% loc($agtype) %></label>
+                            </div>
+%                       }
+                    </div>
+
+                    <div class="field-container">
+%                       my $field_num = 1;
+%                       my $fields = (exists $data->{'sfields'}) ? $data->{'sfields'} : [];
+%                       foreach my $config_field (@$fields) {
+%                           my $field_actual_values = {
+%                               field => [$config_field->{'field'}],
+%                               op => [$config_field->{'op'}],
+%                               value => [$config_field->{'value'}]
+%                           };
+                            <& FCTest, field_num => $field_num, data => $field_data, actual_values => $field_actual_values, field_type => 'sfields' &>
+%                           $field_num++;
+%                       }
+                    </div>
+
+                    <div class="new-field-container" style="display: none">
+                        <& FCTest, dummy => 1, data => $field_data, field_type => 'sfields' &>
+                    </div>
+
+                    <div class="elgrp">
+                        <input class="add-field button" type="button" value="<&|/l&>Add field</&>" id="add-sfields" />
+                    </div>
+                </fieldset>
+            </div>
+    </div>
+</&>
+
+<&| /Widgets/TitleBox,title => loc('Fails if'), class=>'reject-rule', 'rolledup'=>0 &>
+    <div class="elgrp">
+        <div class="el rfields-list field-list">
+            <span class="label"><&|/l&>Incoming data tests</&></span>
+            <fieldset>
+                <div class="ctlgrp">
+%               $val = (exists $data->{'rfieldsaggreg'}) ? $data->{'rfieldsaggreg'} : (keys %$aggreg_types)[0];
+%               foreach my $agtype (sort keys %$aggreg_types) {
+                    <div>
+                        <input type="radio" name="<% join('-', ('rfields', 'aggreg')) %>" id="<% join('-', ('rfields', 'aggreg', $agtype)) %>" value= "<% $agtype %>" <% ($agtype eq $val) ? 'checked' : '' %> />
+                        <label for="<% join('-', ('rfields', 'aggreg', $agtype)) %>"><% loc($agtype) %></label>
+                    </div>
+%               }
+                </div>
+
+                <div class="field-container">
+%               my $field_num = 1;
+%               my $fields = (exists $data->{'rfields'}) ? $data->{'rfields'} : [];
+%               foreach my $config_field (@$fields) {
+%                   my $field_actual_values = {
+%                       field => [$config_field->{'field'}],
+%                       op => [$config_field->{'op'}],
+%                       value => [$config_field->{'value'}]
+%                   };
+                    <& FCTest, field_num => $field_num, data => $field_data, actual_values => $field_actual_values, field_type => 'rfields' &>
+%                   $field_num++;
+%               }
+%               if (scalar(@$fields) == 0) {
+                    <& FCTest, data => $field_data, field_type => 'rfields' &>
+%               }
+                </div>
+
+                <div class="new-field-container" style="display: none">
+                    <& FCTest, dummy => 1, data => $field_data, field_type => 'rfields' &>
+                </div>
+
+                <div class="elgrp">
+                    <input class="add-field button" type="button" value="<&|/l&>Add field</&>" id="add-rfields" />
+                </div>
+            </fieldset>
+        </div>
+    </div>
+</&>
+
+<script type="text/javascript">
+    function add_field(e) {
+        field_container = jQuery(e.target).parent().siblings('.field-container').first();
+        new_field_container = jQuery(e.target).parent().siblings(".new-field-container").first();
+        fields_count = field_container.find(".field").size();
+
+        str = new_field_container
+            .html()
+            .replace(/%1/g, fields_count + 1);
+        field_container.append(str);
+    }
+
+    jQuery(".button.add-field").click(add_field);
+</script>
+
+<%args>
+$filling => {}
+$data => {}
+$aggreg_types => []
+</%args>

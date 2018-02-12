@@ -28,10 +28,13 @@
     .ctlgrp {
         margin-bottom: 10px;
     }
+    .field-list fieldset {
+        margin: 1px 0;
+    }
 </style>
 
 <form action="/Admin/Tools/FieldsControl/edit.html?id=<% $id %>&Create=<% $Create %>" method="post">
-    <& Elements/RejectRule, filling => $filling, data => $rule, aggreg_types => \%aggreg_types &>
+    <& Elements/FCRule, filling => $filling, data => $rule, aggreg_types => \%aggreg_types &>
     <& /Elements/Submit, Name => 'submit', Label => loc('Save Changes') &>
 %   if ($Create == 0) {
         <& /Elements/Submit, Name => 'remove', Label => loc('REMOVE'), OnClick => "return confirm('" . loc("Do you want to remove rule?") . "');" &>
@@ -41,7 +44,7 @@
 <%init>
 use Data::Dumper qw{Dumper};
 
-my $title = loc('Tickets update reject rules');
+my $title = loc('FieldsControl rule');
 unless ($session{'CurrentUser'}->HasRight( Object=> $RT::System, Right => 'SuperUser')) {
     Abort(loc('This feature is only available to system administrators'));
 }
