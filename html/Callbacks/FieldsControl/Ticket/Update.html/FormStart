@@ -1,0 +1,10 @@
+<%args>
+$Ticket
+$ARGSRef
+$CanRespond
+$CanComment
+$ResponseDefault
+$CommentDefault
+</%args>
+
+<input type="hidden" name="FCTicketLastUpdated" value="<% $Ticket->LastUpdated %>" />
