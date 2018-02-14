@@ -460,6 +460,14 @@ sub write_config {
 Check given ticket across all rules. This is main function called from Mason 
 callbacks when it triggered.
 
+Returns hash. 'errors' item contains failed rules and fields.
+'tests_refer_to_ticket' set to 1 if some of tests in rules (either in 
+"Applies to" or "Fail if") refer to the current ticket field value. 
+Intended to avoid situation when the ticket was changed by someone after page 
+load, so __old__ would refer to the changed value not the one which user
+sees. As a result the test "CF.1 equal __old__" will always give false even 
+nothing changed on the page. Solution is to reload the page with changes losing.
+
 Parameters:
 
 =over
@@ -476,8 +484,8 @@ Returns:
 
 =over
 
-=item ARRAY -- Failed rules and fields which caused failure. 
-[{name => <rule_name>, fields => ARRAYRef}, ...].
+=item HASHREF -- 
+{errors => [$rule_name1, \@failed_fields1, ...], tests_refer_to_ticket => 1|0}
 
 =back
 
@@ -488,7 +496,10 @@ sub check_ticket {
     my $ticket = shift;
     my $ARGSRef = shift;
     my $callback_name = shift;
-    my $errors = [];
+    my $errors = {
+        errors => [],
+        tests_refer_to_ticket => 0
+    };
 
     my $config = load_config;
     return $errors unless $config; # No rules
@@ -548,11 +559,7 @@ sub check_ticket {
 
         my $rule_name = $rule->{'rulename'};
         if ($aggreg_res == 1) {
-            push @$errors,
-                {
-                    name => $rule_name,
-                    fields => [@{$matches->{'match'}}]
-                };
+            push @{$errors->{errors}}, $rule_name, [@{$matches->{'match'}}];
         }
     }
 
@@ -660,5 +667,6 @@ sub find_ticket {
 
     return 1;
 }
+
 
 1;

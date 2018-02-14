@@ -6,18 +6,14 @@ $results => []
 </%args>
 
 <%init>
-my $errors = RT::Extension::FieldsControl::check_ticket($TicketObj, $ARGSRef, 'Modify');
-if (ref($errors) ne "ARRAY") {
+my $check = RT::Extension::FieldsControl::check_ticket($TicketObj, $ARGSRef, 'Modify');
+if (my @e = @{$check->{errors}}) {
 	$$skip_update = 1;
-	push @$results, loc('ERROR: unknown error in FieldsControl module. Contact your RT administrator. Message: [_1]', $errors);
-
-} elsif (@$errors) {
-	$$skip_update = 1;
-	foreach (@$errors) {
+	while (my $name = shift @e) {
 		push @$results, 
 			loc("ERROR: Restriction <[_1]>, bad fields: ~[[_2]~]",
-				$_->{'name'},
-				join ',', map { loc($_) } @{$_->{'fields'}}
+				$name,
+				join ',', map { loc($_) } @{shift @e}
 			);
 	}
 }
