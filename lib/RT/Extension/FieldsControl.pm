@@ -521,10 +521,11 @@ sub check_ticket {
 
         # Substitute special tags in sfields values
         foreach (@{$rule->{'sfields'}}) {
-            if ($_->{'value'} eq '__old__' 
-                && exists($ticket_values->{$_->{'field'}})) 
-            {
-                $_->{'value'} = $ticket_values->{$_->{'field'}} 
+            if ($_->{'value'} eq '__old__') {
+                if (exists($ticket_values->{$_->{'field'}})) {
+                    $_->{'value'} = $ticket_values->{$_->{'field'}};
+                }
+                $errors->{tests_refer_to_ticket} = 1;
             }
         }
         my $matches = check_txn_fields($txn_values, $rule->{'sfields'});
@@ -544,10 +545,11 @@ sub check_ticket {
 
         # Substitute special tags in rfields values
         foreach (@{$rule->{'rfields'}}) {
-            if ($_->{'value'} eq '__old__' 
-                && exists($ticket_values->{$_->{'field'}})) 
-            {
-                $_->{'value'} = $ticket_values->{$_->{'field'}} 
+            if ($_->{'value'} eq '__old__') {
+                if (exists($ticket_values->{$_->{'field'}})) {
+                    $_->{'value'} = $ticket_values->{$_->{'field'}};
+                }
+                $errors->{tests_refer_to_ticket} = 1;
             }
         }
         my $rvalues = {%$ticket_values, %$txn_values};
