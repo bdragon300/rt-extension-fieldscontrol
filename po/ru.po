@@ -102,6 +102,9 @@ msgstr "ОШИБКА: Ограничение <%1>, несовпавшие пол
 msgid "ERROR: unknown error in FieldsControl module. Contact your RT administrator. Message: %1"
 msgstr "ОШИБКА: неизвестная ошибка в модуле FieldsControl. Обратитесь к своему администратору RT. Сообщение: %1"
 
+msgid "ERROR: The ticket was changed by someone at the same time as you. Please make your changes again."
+msgstr "ОШИБКА: Тикет был изменен кем-то одновременно с Вами. Пожалуйста, повторите Ваши изменения."
+
 #
 # Fields
 #
