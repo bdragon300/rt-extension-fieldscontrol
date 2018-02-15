@@ -1,5 +1,0 @@
-<%args>
-$Ticket
-</%args>
-
-<input type="hidden" name="FCTicketLastUpdated" value="<% $Ticket->LastUpdated %>" />

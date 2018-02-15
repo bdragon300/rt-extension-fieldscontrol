@@ -7,4 +7,4 @@ $ResponseDefault
 $CommentDefault
 </%args>
 
-<input type="hidden" name="FCTicketLastUpdated" value="<% $Ticket->LastUpdated %>" />
+<input type="hidden" name="FCTicketLastUpdated" value="<% $ARGSRef->{FCTicketLastUpdated} || $Ticket->LastUpdated %>" />

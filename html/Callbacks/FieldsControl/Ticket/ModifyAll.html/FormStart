@@ -1,0 +1,11 @@
+<%args>
+$ARGSRef
+</%args>
+
+<input type="hidden" name="FCTicketLastUpdated" value="<% $ARGSRef->{FCTicketLastUpdated} || $ticket->LastUpdated %>" />
+
+<%init>
+my $id = int($ARGSRef->{id});
+my $ticket = RT::Ticket->new($session{'CurrentUser'});
+$ticket->Load($id);
+</%init>
