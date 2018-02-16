@@ -33,26 +33,23 @@ msgstr "Правило #%1 удалено"
 msgid "ERROR: Cannot remove: %1"
 msgstr "ОШИБКА: Невозможно удалить: %1"
 
-msgid "ERROR: Empty name"
-msgstr "ОШИБКА: Пустое имя"
+msgid "ERROR: Name field is required"
+msgstr "ОШИБКА: Поле Имя обязательно для заполнения"
 
-msgid "ERROR: Wrong %1"
-msgstr "ОШИБКА: %1 некорректно"
+msgid "ERROR: TicketSQL selection field is required"
+msgstr "ОШИБКА: Поле выборки TicketSQL обязательно для заполнения"
 
-msgid "ERROR: Wrong %1: %2"
-msgstr "ОШИБКА: %1 некорректно: %2"
+msgid "ERROR: Bad TicketSQL: %1"
+msgstr "ОШИБКА: Неправильный TicketSQL: %1"
 
-msgid "Checking field"
-msgstr "Проверяемое поле"
+msgid "ERROR: Section \"%1\", test #%2"
+msgstr "ОШИБКА: Секция \"%1\", тест #%2"
 
-msgid "Field from New ticket state"
-msgstr "Поле из нового состояния тикета"
+msgid "ERROR: bad aggregation in section \"%1\""
+msgstr "ОШИБКА: неправильный тип объединения в секции \"%1\""
 
-msgid "ERROR: incorrect aggregation type in %1"
-msgstr "ОШИБКА: некорректный тип объединения в %1"
-
-msgid "ERROR: Empty %1"
-msgstr "ОШИБКА: %1 пусто"
+msgid "ERROR: \"%1\" section must contain at least one test"
+msgstr "ОШИБКА: Секция \"%1\" должна содержать хотя бы один тест"
 
 msgid "Configuration saved"
 msgstr "Конфигурация сохранена"

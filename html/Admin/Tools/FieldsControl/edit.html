@@ -95,29 +95,27 @@ if ($ARGS{'submit'}) {
     $rule = {};
 
     # Retrieve rule name
-    push @results, loc("ERROR: Empty name") unless ($ARGS{'name'});
+    push @results, loc("ERROR: Name field is required") unless ($ARGS{'name'});
     $rule->{'rulename'} = $ARGS{'name'};
 
     # Rule enabled
     $rule->{'enabled'} = (exists($ARGS{'enabled'}));
     
-
-    # Check whether SQL correct
-    foreach my $key (('searchsql')) {
-        my $val = $ARGS{$key};
-        push @results, loc("ERROR: Wrong [_1]", ucfirst ${key}) unless $val;
-        my ($res, $msg) = $tickets->FromSQL($val);
-
-        unless ($res) {
-            push @results, loc("ERROR: Wrong [_1]: [_2]", ucfirst ${key}, $msg);
-        }
-        $rule->{$key} = $val;
+    # Check whether TicketSQL is correct
+    my $val = $ARGS{searchsql};
+    unless ($val) {
+        push @results, loc("ERROR: TicketSQL selection field is required");
     }
+    my ($res, $msg) = $tickets->FromSQL($val);
+    unless ($res) {
+        push @results, loc("ERROR: Bad TicketSQL: [_1]", $msg);
+    }
+    $rule->{searchsql} = $val;
     
     # Retrieve fields
     my %field_types = (
-        'rfields' => 'Checking field', #loc
-        'sfields' => 'Field from New ticket state' #loc
+        'sfields' => 'Applies to', #loc
+        'rfields' => 'Fails if', #loc
     );
     foreach my $field_type (keys %field_types) {
         my $j = 1;
@@ -143,7 +141,7 @@ if ($ARGS{'submit'}) {
             unless ((grep { $_ eq $f } @fields_list)
                 && (grep { $_ eq $op } @ops))
             {
-                push @results, loc("ERROR: Wrong [_1]", loc($field_types{$field_type}) . " #${j}");
+                push @results, loc('ERROR: Section "[_1]", test #[_2]', loc($field_types{$field_type}), $j);
             }
             $j++;
         }
@@ -153,13 +151,12 @@ if ($ARGS{'submit'}) {
         {
             $rule->{$field_type . 'aggreg'} = $aggreg_type;
         } else {
-            push @results, loc("ERROR: incorrect aggregation type in [_1]", loc($field_types{$field_type}));
+            push @results, loc('ERROR: bad aggregation in section "[_1]"', loc($field_types{$field_type}));
         }
     }
     unless (@{$rule->{'rfields'}}) {
-        push @results, loc("ERROR: Empty [_1]", loc($field_types{'rfields'}));
+        push @results, loc('ERROR: "[_1]" section must contain at least one test', loc($field_types{'rfields'}));
     }
-
 
     unless (@results) {
         $id = scalar(@$config) if ($Create); 
