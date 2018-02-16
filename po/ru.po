@@ -60,7 +60,7 @@ msgstr "ОШИБКА: Невозможно сохранить конфигура
 msgid "Common"
 msgstr "Общее"
 
-mgsid "Applies to"
+msgid "Applies to"
 msgstr "Применяется к"
 
 msgid "TicketSQL selection"
