@@ -32,12 +32,11 @@ if ($ARGSRef->{FCAbort}) {
 	
 } elsif (my @e = @{$check->{errors}}) {
 	$$skip_update = 1;
+	push @$results, loc('ERROR: request aborted because of following restrictions:');
 	while (my $name = shift @e) {
 		push @$results, 
-			loc("ERROR: Restriction <[_1]>, bad fields: ~[[_2]~]",
-				$name,
-				join ',', map { loc($_) } @{shift @e}
-			);
+			loc("~~> [_1]", $name),
+			loc("~~~~~~> Failed fields: [_1]", join(', ', map { loc($_) } @{shift @e}));
 	}
 }
 </%init>

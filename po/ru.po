@@ -93,8 +93,11 @@ msgstr "ИГНОРИРОВАТЬ?"
 msgid "DELETE?"
 msgstr "УДАЛИТЬ?"
 
-msgid "ERROR: Restriction <%1>, bad fields: [%2]"
-msgstr "ОШИБКА: Ограничение <%1>, несовпавшие поля: [%2]"
+msgid "ERROR: request aborted because of following restrictions:"
+msgstr "ОШИБКА: запрос был прерван из-за следующих ограничений:"
+
+msgid "~~~> Failed fields: %1"
+msgstr "~~~> Неверные поля: %1"
 
 msgid "ERROR: unknown error in FieldsControl module. Contact your RT administrator. Message: %1"
 msgstr "ОШИБКА: неизвестная ошибка в модуле FieldsControl. Обратитесь к своему администратору RT. Сообщение: %1"
