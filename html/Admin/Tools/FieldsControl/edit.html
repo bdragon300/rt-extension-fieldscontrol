@@ -35,9 +35,18 @@
 
 <form action="/Admin/Tools/FieldsControl/edit.html?id=<% $id %>&Create=<% $Create %>" method="post">
     <& Elements/FCRule, filling => $filling, data => $rule, aggreg_types => \%aggreg_types &>
-    <& /Elements/Submit, Name => 'submit', Label => loc('Save Changes') &>
+
 %   if ($Create == 0) {
-        <& /Elements/Submit, Name => 'remove', Label => loc('REMOVE'), OnClick => "return confirm('" . loc("Do you want to remove restriction?") . "');" &>
+    <& /Elements/Submit, 
+        Name => 'submit', 
+        Label => loc('Save Changes'), 
+        Back => 1,
+        BackName => 'remove', 
+        BackLabel => loc('Remove restriction'),
+        BackOnClick => "return confirm('" . loc("Do you want to remove restriction?") . "');"
+    &>
+%   } else {
+    <& /Elements/Submit, Name => 'submit', Label => loc('Save Changes') &>
 %   }
 </form>
 
