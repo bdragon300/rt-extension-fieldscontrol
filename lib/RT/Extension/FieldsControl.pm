@@ -18,26 +18,26 @@ RT::Extension::FieldsControl - Conditional ticket/transaction fields validation
 =head1 DESCRIPTION
 
 This extension validates ticket and transaction fields on each ticket update 
-according on preconfigured rules.
+according on preconfigured restrictions.
 
-Each validation rule can be applied only to certain tickets using TicketSQL 
-selection and/or incoming fields value tests. In applicable rules the incoming 
-fields value verifies using control tests. If control tests at least in one 
-rule have failed then ticket update aborts and failed rules appears in error 
-message (with optional comments).
+Each restriction can be applied only to certain tickets using TicketSQL 
+selection and/or incoming fields value tests. In applicable restriction 
+the incoming fields value verifies using control tests. If control tests at 
+least in one restriction have failed then ticket update aborts and failed 
+restrictions appears in error message (with optional comments).
+Incoming fields value can be tested against to string, regular expression 
+or current field value.
 
-Incoming fields value can be tested against to string, regular expression or 
-current field value.
-
-Thus you have flexible method to control the moving of certain tickets from one 
-"state" to another.
+Thus you have flexible method to control the moving of certain tickets from 
+one "state" to another.
 
 Some examples:
 
 =over
 
 =item * make required fields only for certain tickets (e.g. deny close incident 
-(ticket in "support" queue with CF.{InteractionType}="Incident") with empty CF.{IncidentReason})
+(ticket in "support" queue with CF.{InteractionType}="Incident") with empty 
+CF.{IncidentReason})
 
 =item * lock "Client" custom role after initial set for all users, only 
 management or admins can change them
@@ -45,10 +45,10 @@ management or admins can change them
 =item * deny Correspond via web interface in closed tickets
 
 =item * deny simultaneous change CF.{InteractionType} and CF.{GenerateInvoice}. 
-Useful when you have "trigger" CF (CF.{GenerateInvoice}) and appropriate Action 
-(generate invoice depending on InteractionType). Reason is that RT does not 
-guarantee the executing transactions in certain order, so you can get either 
-old or new CF.{InteractionType} value when Action executed.
+Useful when you have "trigger" CF (CF.{GenerateInvoice}) and appropriate 
+Action (generate invoice depending on InteractionType). Reason is that RT does 
+not guarantee the executing transactions in certain order, so you can get 
+either old or new CF.{InteractionType} value when Action executed.
 
 =back
 

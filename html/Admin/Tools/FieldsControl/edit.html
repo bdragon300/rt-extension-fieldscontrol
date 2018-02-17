@@ -37,14 +37,14 @@
     <& Elements/FCRule, filling => $filling, data => $rule, aggreg_types => \%aggreg_types &>
     <& /Elements/Submit, Name => 'submit', Label => loc('Save Changes') &>
 %   if ($Create == 0) {
-        <& /Elements/Submit, Name => 'remove', Label => loc('REMOVE'), OnClick => "return confirm('" . loc("Do you want to remove rule?") . "');" &>
+        <& /Elements/Submit, Name => 'remove', Label => loc('REMOVE'), OnClick => "return confirm('" . loc("Do you want to remove restriction?") . "');" &>
 %   }
 </form>
 
 <%init>
 use Data::Dumper qw{Dumper};
 
-my $title = loc('FieldsControl rule');
+my $title = loc('FieldsControl restriction');
 unless ($session{'CurrentUser'}->HasRight( Object=> $RT::System, Right => 'SuperUser')) {
     Abort(loc('This feature is only available to system administrators'));
 }
@@ -78,7 +78,7 @@ if ($ARGS{'remove'}) {
     splice(@$config, $id, 1);
     my ($res, $msg) = RT::Extension::FieldsControl::write_config($config);
     if ($res) {
-        push @results, loc('Rule #[_1] removed', $id);
+        push @results, loc('Restriction #[_1] removed', $id);
     } else {
         push @results, loc('ERROR: Cannot remove: [_1]', $msg);
     }

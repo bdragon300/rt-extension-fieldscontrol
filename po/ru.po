@@ -21,14 +21,14 @@ msgstr "Проверяемые поля"
 msgid "REMOVE"
 msgstr "УДАЛИТЬ"
 
-msgid "Do you want to remove rule?"
-msgstr "Вы действительно хотите удалить правило?"
+msgid "Do you want to remove restriction?"
+msgstr "Вы действительно хотите удалить ограничение?"
 
-msgid "FieldsControl rule"
-msgstr "Правило FieldsControl"
+msgid "FieldsControl restriction"
+msgstr "Ограничение FieldsControl"
 
-msgid "Rule #%1 removed"
-msgstr "Правило #%1 удалено"
+msgid "Restriction #%1 removed"
+msgstr "Ограничение #%1 удалено"
 
 msgid "ERROR: Cannot remove: %1"
 msgstr "ОШИБКА: Невозможно удалить: %1"

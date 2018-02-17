@@ -4,9 +4,9 @@ RT::Extension::FieldsControl -- Conditional ticket/transaction fields validation
 
 # Description
 
-This extension validates ticket and transaction fields on each ticket update according on preconfigured rules.
+This extension validates ticket and transaction fields on each ticket update according on preconfigured restrictions.
 
-Each validation rule can be applied only to certain tickets using TicketSQL selection and/or incoming fields value tests. In applicable rules the incoming fields value verifies using control tests. If control tests at least in one rule have failed then ticket update aborts and failed rules appears in error message (with optional comments).
+Each restriction can be applied only to certain tickets using TicketSQL selection and/or incoming fields value tests. In applicable restriction the incoming fields value verifies using control tests. If control tests at least in one restriction have failed then ticket update aborts and failed restrictions appears in error message (with optional comments).
 Incoming fields value can be tested against to string, regular expression or current field value.
 
 Thus you have flexible method to control the moving of certain tickets from one "state" to another.
@@ -49,18 +49,18 @@ After installing you may need to clear Mason cache and restart webserver.
 
 # Work summary
 
-To configure rules go to *Admin->Tools->Fields Control* (you must have SuperUser rights).
+To configure restrictions go to *Admin->Tools->Fields Control* (you must have SuperUser rights).
 
-Each rule consists of:
-* "Common" section -- rule name, Enable checkbox;
-* "Applies to" section -- which tickets this rule is applied to. Rule will be applied if ticket satisfied to TicketSQL expression and if all (AND) or some (OR) incoming data tests will be passed (if any);
+Each restriction consists of:
+* "Common" section -- restriction name, Enable checkbox;
+* "Applies to" section -- which tickets this restriction is applied to. Restriction will be applied if ticket satisfied to TicketSQL expression and if all (AND) or some (OR) incoming data tests will be passed (if any);
 * "Fails if" section -- error will be raised if all (AND) or some (OR) tests will be passed.
 
 When user tries to update a ticket the following algorithm performs:
-1. Select only rules applicable to the current ticket among all enabled rules ("Applies to" section);
-2. Incoming page fields will be tested against "Fails if" section tests of all selected rules;
-3. If "Fails if" section gives true, then the rule considered as failed;
-4. If we have failed rules from previous step then show them all in the error message and abort ticket updating.
+1. Select only restrictions applicable to the current ticket among all enabled restrictions ("Applies to" section);
+2. Incoming page fields will be tested against "Fails if" section tests of all selected restrictions;
+3. If "Fails if" section gives true, then the restriction considered as failed;
+4. If we have failed restrictions from previous step then show them all in the error message and abort ticket updating.
 
 NOTE: if field was set with multiple values on the page then each of value will be tested.
 
