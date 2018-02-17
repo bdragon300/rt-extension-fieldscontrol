@@ -17,12 +17,12 @@ if ( $session{'CurrentUser'}->HasRight( Right => 'ShowConfigTab', Object => RT->
     {
         $page_menu->child(select => 
             title       => loc('Select'),
-            description => 'FieldsControl restrictions',
+            description => loc('FieldsControl restriction list'),
             path        => '/Admin/Tools/FieldsControl'
         );
         $page_menu->child(create => 
             title       => loc('Create'),
-            description => 'Create new FieldsControl restriction',
+            description => loc('Create new FieldsControl restriction'),
             path        => '/Admin/Tools/FieldsControl/edit.html?Create=1'
         );
     }

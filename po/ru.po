@@ -170,6 +170,12 @@ msgstr "Транзакция.Тип"
 # Other
 #
 
+msgid "FieldsControl restriction list"
+msgstr "Список ограничений FieldsControl"
+
+msgid "Create new FieldsControl restriction"
+msgstr "Создать новое ограничение FieldsControl"
+
 msgid "Name"
 msgstr "Имя"
 
