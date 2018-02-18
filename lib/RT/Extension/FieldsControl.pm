@@ -154,16 +154,37 @@ our $empty_is_unchanged_fields = {
 
 Operations available while testing ticket/transaction fields
 <Displaying name> => <callback>
-Callback receives two params, each can be ARRAY or SCALAR
+Callback receives two params: data (can be SCALAR or ARRAY) and test value
+If ARRAY given in data then each element will be tested against test value
 
 =cut
 
 #loc_left_pair
 our $available_ops = {
-    'equal'             => sub { (ref($_[0]) eq 'ARRAY') ? int(grep(/^$_[1]$/, @{$_[0]}))  : int($_[0] eq $_[1]); },
-    'not equal'         => sub { (ref($_[0]) eq 'ARRAY') ? int( ! grep(/^$_[1]$/, @{$_[0]})) : int($_[0] ne $_[1]); },
-    'match regex'       => sub { (ref($_[0]) eq 'ARRAY') ? int(grep(/$_[1]/, @{$_[0]})) : int($_[0] =~ /$_[1]/); },
-    'not match regex'   => sub { (ref($_[0]) eq 'ARRAY') ? int( ! grep(/$_[1]/, @{$_[0]})) : int($_[0] !~ /$_[1]/); },
+    'equal' =>
+        sub {
+            (ref($_[0]) eq 'ARRAY')
+            ? int(grep(/^$_[1]$/, @{$_[0]}))
+            : int($_[0] eq $_[1]);
+        },
+    'not equal' =>
+        sub {
+            (ref($_[0]) eq 'ARRAY')
+            ? int( ! grep(/^$_[1]$/, @{$_[0]}))
+            : int($_[0] ne $_[1]);
+        },
+    'match regex' =>
+        sub {
+            (ref($_[0]) eq 'ARRAY')
+            ? int(grep(/$_[1]/, @{$_[0]}))
+            : int($_[0] =~ /$_[1]/);
+        },
+    'not match regex' =>
+        sub {
+            (ref($_[0]) eq 'ARRAY')
+            ? int( ! grep(/$_[1]/, @{$_[0]}))
+            : int($_[0] !~ /$_[1]/);
+        },
 };
 
 
