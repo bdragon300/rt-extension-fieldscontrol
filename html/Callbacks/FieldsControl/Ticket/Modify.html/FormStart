@@ -2,7 +2,7 @@
 $ARGSRef
 </%args>
 
-<input type="hidden" name="FCTicketLastUpdated" value="<% $ARGSRef->{FCTicketLastUpdated} || $ticket->LastUpdated %>" />
+<input type="hidden" name="FCLastUpdated-Ticket-cur" value="<% $ARGSRef->{'FCLastUpdated-Ticket-cur'} || $ticket->LastUpdated %>" />
 
 <%init>
 my $id = int($ARGSRef->{id});

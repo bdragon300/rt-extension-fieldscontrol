@@ -9,7 +9,7 @@ $results => []
 my $check = RT::Extension::FieldsControl::check_ticket($TicketObj, $ARGSRef, 'Update');
 
 # Check whether ticket changed by someone since last page load
-my $lastupdated = $ARGSRef->{FCTicketLastUpdated} || '0';
+my $lastupdated = $ARGSRef->{'FCLastUpdated-Ticket-cur'} || '0';
 if ($ARGSRef->{FCAbort}) {
 	$$skip_update = 1;
 	push @$results, 
