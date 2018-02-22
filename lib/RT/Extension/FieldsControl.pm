@@ -524,7 +524,6 @@ sub check_ticket {
 
     my $config = load_config;
     return $errors unless $config; # No rules
-    return $errors unless exists($ARGSRef->{'SubmitTicket'});
 
     my $fields = get_fields_list;
     my $txn_values = fill_txn_fields($fields, $ticket, $ARGSRef, $callback_name);
