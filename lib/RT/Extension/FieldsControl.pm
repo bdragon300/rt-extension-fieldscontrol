@@ -454,7 +454,7 @@ sub fill_txn_fields {
                 my $maxv = $cf->MaxValues;
                 if ($maxv == 1) {
                     @arg_val = ($arg_val[-1])
-                } else {
+                } elsif ($maxv > 1) {
                     @arg_val = grep { defined } @to_add_n[-$maxv..-1];
                 }
             }
