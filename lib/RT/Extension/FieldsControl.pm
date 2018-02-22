@@ -298,6 +298,60 @@ sub fill_ticket_fields {
     return $res;
 }
 
+=head2 normalize_object_custom_field_values(CustomField => $cf_obj, Value => $value) -> @values
+
+Split up and normalize custom field value incoming with request if needed. 
+Uses when custom field type allows to set multiple values in a single textarea
+field. To normalize means to clean redundant spaces, tabs.
+Honesty stolen from RT::Interface::Web::_NormalizeObjectCustomFieldValue with 
+some changes.
+
+Parameters:
+
+=over
+
+=item $cf_obj -- RT::CustomField object
+
+=item $value -- custom field value comes from page
+
+=back
+
+Returns:
+
+=over
+
+=item ARRAY -- values array
+
+=back
+
+=cut
+
+sub normalize_object_custom_field_values {
+    my %args = (
+        @_
+    );
+    my $cf_type = $args{CustomField}->Type;
+    my @values  = ();
+
+    if ( ref $args{'Value'} eq 'ARRAY' ) {
+        @values = @{ $args{'Value'} };
+    } elsif ( $cf_type =~ /text/i ) {    # Both Text and Wikitext
+        @values = ( $args{'Value'} );
+    } else {
+        @values = split /\r*\n/, $args{'Value'}
+            if defined $args{'Value'};
+    }
+    @values = grep length, map {
+        s/\r+\n/\n/g;
+        s/^\s+//;
+        s/\s+$//;
+        $_;
+        }
+        grep defined, @values;
+
+    return @values;
+}
+
 
 =head2 fill_txn_fields(\%fields, $ticket, \%ARGSRef, $callback_name) -> \%filled_fields
 
@@ -362,8 +416,57 @@ sub fill_txn_fields {
     }
     foreach my $cf_abbr (grep /^CF./, keys %$fields) {
         my $cf_id = $fields->{$cf_abbr};
-        my @arg_val = grep /^Object-[:\w]+-[0-9]+-CustomField-${cf_id}-Value[^-]?$/, keys %$ARGSRef;
-        $res->{$cf_abbr} = $ARGSRef->{$arg_val[0]} if (@arg_val);
+        my @arg_val = ();
+
+        # Bulk page sends Add/Delete values (i.e. diff) when other pages send
+        # only new values
+        if (ucfirst $callback_name eq 'Bulk') {
+            my @to_add = 
+                map $ARGSRef->{$_},
+                grep /^Bulk-Add-CustomField-${cf_id}-Value[^-]?$/, 
+                keys %$ARGSRef;
+            my @to_delete = 
+                map $ARGSRef->{$_},
+                grep /^Bulk-Delete-CustomField-${cf_id}-Value[^-]?$/, 
+                keys %$ARGSRef;
+            next unless (@to_delete || @to_add);
+            my $cf = $ticket->LoadCustomFieldByIdentifier( $cf_id );
+            next unless $cf->id;
+            my $vals_collection = $cf->ValuesForObject($ticket);
+
+            # Apply CF "diff". Leave @arg_val empty if delete all values
+            unless ($ARGSRef->{"Bulk-Delete-CustomField-${cf_id}-AllValues"}) {
+                @arg_val = map { $_->Content } @{$vals_collection->ItemsArrayRef};
+                
+                # RT firstly tries to delete values, then add new ones. Do the same
+                my @to_delete_n = normalize_object_custom_field_values(
+                    CustomField => $cf, 
+                    Value => $to_delete[0]
+                );
+                @arg_val = grep ! ( $_ ~~ @to_delete_n ), @arg_val;
+                
+                my @to_add_n = normalize_object_custom_field_values(
+                    CustomField => $cf, 
+                    Value => $to_add[0]
+                );
+                @arg_val = (@arg_val, @to_add_n);
+
+                my $maxv = $cf->MaxValues;
+                if ($maxv == 1) {
+                    @arg_val = ($arg_val[-1])
+                } else {
+                    @arg_val = grep { defined } @to_add_n[-$maxv..-1];
+                }
+            }
+
+        } else {
+            @arg_val = 
+                map $ARGSRef->{$_},
+                grep /^Object-[:\w]+-[0-9]+-CustomField-${cf_id}-Value[^-]?$/, 
+                keys %$ARGSRef;
+            next unless (@arg_val);  # No such CF
+        }
+        $res->{$cf_abbr} = \@arg_val;
     }
 
     # Transaction.Type

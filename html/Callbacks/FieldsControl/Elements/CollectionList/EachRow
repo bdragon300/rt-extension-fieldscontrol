@@ -1,0 +1,11 @@
+<%args>
+$Record
+$Warning
+$Classes
+$Format
+</%args>
+
+% my $uri = $r->uri || 'Bulk.html';
+% if ($Record->isa('RT::Ticket') && $uri =~ /Bulk\.html/) {
+<tbody style="display:none"><tr><td><input type="hidden" name="FCLastUpdated-Ticket-<% $Record->id %>" value="<% $Record->LastUpdated %>" /></td></tr></tbody>
+% }

@@ -1,0 +1,36 @@
+<%init>
+my @results = ();
+my @passed_tickets;
+while (my $ticket_id = shift @UpdateTicket) {
+	my $ticket = RT::Ticket->new($session{'CurrentUser'});
+	$ticket->Load($ticket_id) || Abort('Ticket $ticket_id could not be loaded');
+
+	my $check = RT::Extension::FieldsControl::check_ticket($ticket, \%ARGS, 'Bulk');
+	use Data::Dumper qw(Dumper);
+	
+	# Check whether some ticket changed by someone since last page load
+	my $lastupdated = $ARGS{"FCLastUpdated-Ticket-${ticket_id}"} || '0';
+	if ($ticket->LastUpdated gt $lastupdated
+		&& $check->{tests_refer_to_ticket})
+	{
+		push @results, 
+			loc("ERROR: Ticket #${ticket_id} was changed by someone at the same time as you. Please make your changes again.");
+		@UpdateTicket = grep { $_ != $ticket_id } @UpdateTicket;
+	} elsif (my @e = @{$check->{errors}}) {
+		push @results, loc("ERROR: Ticket #${ticket_id} request aborted because of following restrictions:");
+		while (my $name = shift @e) {
+			push @results, 
+				loc("~~> [_1]", $name),
+				loc("~~~~~~> Failed fields: [_1]", join(', ', map { loc($_) } @{shift @e}));
+		}
+	} else {
+		push @passed_tickets, $ticket_id;
+	}
+}
+$ARGS{UpdateTicket} = \@passed_tickets;
+return $m->comp('/Search/Bulk.html', FCResults => \@results, %ARGS);
+</%init>
+
+<%args>
+@UpdateTicket => ()
+</%args>

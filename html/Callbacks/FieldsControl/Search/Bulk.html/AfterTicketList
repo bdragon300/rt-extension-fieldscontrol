@@ -1,0 +1,37 @@
+<%args>
+$ARGSRef
+</%args>
+
+</form>
+
+<style>
+form {display: none;}
+form.visible-form {display: block;}
+</style>
+
+% if ($ARGSRef->{FCResults}) {
+<& /Elements/ListActions, actions => $ARGSRef->{FCResults} &>
+% }
+
+<form method="post" action="<% RT->Config->Get('WebPath') %>/Search/FCBulk.html" enctype="multipart/form-data" name="BulkUpdate" id="BulkUpdate" class="visible-form">
+% foreach my $var (qw(Query Format OrderBy Order Rows Page SavedSearchId SavedChartSearchId Token)) {
+<input type="hidden" class="hidden" name="<%$var%>" value="<%$ARGSRef->{$var} || ''%>" />
+%}
+<& /Elements/CollectionList, 
+    Query => $ARGSRef->{Query},
+    DisplayFormat => $DisplayFormat,
+    Format => $ARGSRef->{Format},
+    Verbatim => 1,
+    AllowSorting => 1,
+    OrderBy => $ARGSRef->{OrderBy} // 'id',
+    Order => $ARGSRef->{Order} // 'ASC',
+    Rows => $ARGSRef->{Rows},
+    Page => $ARGSRef->{Page} // 1,
+    BaseURL => RT->Config->Get('WebPath')."/Search/Bulk.html?",
+    Class => 'RT::Tickets'
+&>
+
+<%init>
+my $DisplayFormat = "'__CheckBox.{UpdateTicket}__',". $ARGSRef->{Format};
+$DisplayFormat =~ s/\s*,\s*('?__NEWLINE__'?)/,$1,''/gi;
+</%init>
