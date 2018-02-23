@@ -96,8 +96,11 @@ msgstr "УДАЛИТЬ?"
 msgid "ERROR: request aborted because of following restrictions:"
 msgstr "ОШИБКА: запрос был прерван из-за следующих ограничений:"
 
-msgid "~~~> Failed fields: %1"
-msgstr "~~~> Неверные поля: %1"
+msgid "~~~> Failed fields: [ %1 ]"
+msgstr "~~~> Неверные поля: [ %1 ]"
+
+msgid "ERROR: Ticket #%1 request aborted because of following restrictions:"
+msgstr "ОШИБКА: Тикет #%1 запрос был прерван из-за следующих ограничений:"
 
 msgid "ERROR: unknown error in FieldsControl module. Contact your RT administrator. Message: %1"
 msgstr "ОШИБКА: неизвестная ошибка в модуле FieldsControl. Обратитесь к своему администратору RT. Сообщение: %1"

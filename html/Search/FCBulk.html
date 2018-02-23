@@ -18,7 +18,7 @@ while (my $ticket_id = shift @UpdateTicket) {
 		@UpdateTicket = grep { $_ != $ticket_id } @UpdateTicket;
 	} elsif (my @e = @{$check->{errors}}) {
 		push @results, ':' if @results;
-		push @results, loc("ERROR: Ticket #${ticket_id} request aborted because of following restrictions:");
+		push @results, loc("ERROR: Ticket #[_1] request aborted because of following restrictions:", $ticket_id);
 		while (my $name = shift @e) {
 			push @results, 
 				loc("~~> [_1]", $name),
