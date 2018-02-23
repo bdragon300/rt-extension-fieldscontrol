@@ -17,11 +17,12 @@ while (my $ticket_id = shift @UpdateTicket) {
 			loc("ERROR: Ticket #${ticket_id} was changed by someone at the same time as you. Please make your changes again.");
 		@UpdateTicket = grep { $_ != $ticket_id } @UpdateTicket;
 	} elsif (my @e = @{$check->{errors}}) {
+		push @results, ':' if @results;
 		push @results, loc("ERROR: Ticket #${ticket_id} request aborted because of following restrictions:");
 		while (my $name = shift @e) {
 			push @results, 
 				loc("~~> [_1]", $name),
-				loc("~~~~~~> Failed fields: [_1]", join(', ', map { loc($_) } @{shift @e}));
+				loc("~~~~~~> Failed fields: ~[ [_1] ~]", join(', ', map { loc($_) } @{shift @e}));
 		}
 	} else {
 		push @passed_tickets, $ticket_id;

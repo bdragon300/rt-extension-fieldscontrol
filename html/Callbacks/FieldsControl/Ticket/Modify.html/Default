@@ -33,7 +33,7 @@ if ($ARGSRef->{FCAbort}) {
 		while (my $name = shift @e) {
 			push @$results, 
 				loc("~~> [_1]", $name),
-				loc("~~~~~~> Failed fields: [_1]", join(', ', map { loc($_) } @{shift @e}));
+				loc("~~~~~~> Failed fields: ~[ [_1] ~]", join(', ', map { loc($_) } @{shift @e}));
 		}
 	}
 }
