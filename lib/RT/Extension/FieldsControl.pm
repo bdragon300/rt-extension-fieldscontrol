@@ -513,6 +513,14 @@ sub get_transaction_type {
         $res = ['Set', 'Basics', 'Modify', 'CustomField', 'Status'];
     } elsif (ucfirst $callback_name eq 'ModifyAll') {
         $res = ['Jumbo', 'ModifyAll', 'Status'];
+    } elsif (ucfirst $callback_name eq 'Bulk') {
+        if (exists $ARGSRef->{'UpdateType'}
+            && $ARGSRef->{'UpdateType'} eq 'private')
+        {
+            $res = ['Bulk', 'Comment', 'CustomField', 'Status', 'Set'];
+        } else {
+            $res = ['Bulk', 'Correspond', 'CustomField', 'Status', 'Set'];
+        }
     }
 
     return $res;
