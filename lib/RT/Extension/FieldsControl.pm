@@ -512,7 +512,7 @@ sub get_transaction_type {
     } elsif (ucfirst $callback_name eq 'Modify') {
         $res = ['Set', 'Basics', 'Modify', 'CustomField', 'Status'];
     } elsif (ucfirst $callback_name eq 'ModifyAll') {
-        $res = ['Jumbo', 'ModifyAll', 'Status'];
+        $res = ['Jumbo', 'ModifyAll', 'Status', 'Set'];
     } elsif (ucfirst $callback_name eq 'Bulk') {
         if (exists $ARGSRef->{'UpdateType'}
             && $ARGSRef->{'UpdateType'} eq 'private')

@@ -73,7 +73,7 @@ What page causes update. Can have following values:
 * "Comment", "Update", "Status" - Comment page;
 * "Correspond", "Update", "Reply", "Status" - Correspond page;
 * "Set", "Basics", "Modify", "CustomField", "Status" - Basics page;
-* "Jumbo", "ModifyAll", "Status" - Jumbo page.
+* "Jumbo", "ModifyAll", "Status", "Set" - Jumbo page.
 * "Bulk", "CustomField", "Status", "Set" - Bulk Update. Also includes value "Comment" or "Correspond" depended on appropriate operation.
 
 Several pages can have the same Transaction.Type. E.g. if you set *"Transaction.Type" equal "Update"* then this test will be passed both Comment and Correspond page. *"Transaction.Type" equal "Status"* matched to all pages.
