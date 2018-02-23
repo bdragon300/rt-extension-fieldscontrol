@@ -469,19 +469,50 @@ sub fill_txn_fields {
         $res->{$cf_abbr} = \@arg_val;
     }
 
-    # Transaction.Type
+    $res->{'Transaction.Type'} = get_transaction_type($callback_name, $ARGSRef);
+
+    return $res;
+}
+
+
+=head2 get_transaction_type($callback_name, \%ARGSRef) -> \@transaction_type
+
+Return Transaction.Type values array for given data
+
+Parameters:
+
+=over
+
+=item $callback_name
+
+=item $ARGSRef
+
+=back
+
+Returns:
+
+ARRAYREF - Transaction.Type values
+
+=cut
+
+sub get_transaction_type {
+    my $callback_name = shift;
+    my $ARGSRef = shift;
+
+    $res = [];
+
     if (ucfirst $callback_name eq 'Update') {
         if (exists $ARGSRef->{'UpdateType'}
             && $ARGSRef->{'UpdateType'} eq 'private')
         {
-            $res->{'Transaction.Type'} = ['Comment', 'Update', 'Status'];
+            $res = ['Comment', 'Update', 'Status'];
         } else {
-            $res->{'Transaction.Type'} = ['Correspond', 'Update', 'Reply', 'Status'];
+            $res = ['Correspond', 'Update', 'Reply', 'Status'];
         }
     } elsif (ucfirst $callback_name eq 'Modify') {
-        $res->{'Transaction.Type'} = ['Set', 'Basics', 'Modify', 'CustomField', 'Status'];
+        $res = ['Set', 'Basics', 'Modify', 'CustomField', 'Status'];
     } elsif (ucfirst $callback_name eq 'ModifyAll') {
-        $res->{'Transaction.Type'} = ['Jumbo', 'ModifyAll', 'Status'];
+        $res = ['Jumbo', 'ModifyAll', 'Status'];
     }
 
     return $res;
