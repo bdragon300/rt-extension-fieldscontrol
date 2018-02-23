@@ -397,7 +397,7 @@ sub fill_txn_fields {
         $res->{$_} = $ARGSRef->{$fields->{$_}} if (defined $ARGSRef->{$fields->{$_}});
 
         # If empty then retrieve it from TicketObj
-        if (exists($empty_is_unchanged_fields->{$_}) #FIXME: what if field didnt come from page and should not be empty (QueueId on Update.html)
+        if (exists($empty_is_unchanged_fields->{$_})
             && defined($res->{$_})
             && ($res->{$_} eq ''))
         {
