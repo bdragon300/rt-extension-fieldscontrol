@@ -499,7 +499,7 @@ sub get_transaction_type {
     my $callback_name = shift;
     my $ARGSRef = shift;
 
-    $res = [];
+    my $res = [];
 
     if (ucfirst $callback_name eq 'Update') {
         if (exists $ARGSRef->{'UpdateType'}
