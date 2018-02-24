@@ -232,6 +232,7 @@ sub get_fields_list {
 
     my $cfs = RT::CustomFields->new( RT::SystemUser );
     $cfs->Limit(FIELD => 'id', OPERATOR => '>=', VALUE => '0');
+    $cfs->Limit(FIELD => 'lookuptype', OPERATOR => '=', VALUE => 'RT::Queue-RT::Ticket');
     while (my $cf = $cfs->Next) {
         $res->{'CF.' . $cf->Name} = $cf->id;
     }
