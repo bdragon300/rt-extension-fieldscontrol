@@ -724,6 +724,12 @@ sub check_ticket {
         my $rule_name = $rule->{'rulename'};
         if ($aggreg_res == 1) {
             push @{$errors->{errors}}, $rule_name, [@{$matches->{'match'}}];
+            my $tid = $ticket->id;
+            RT::Logger->info(
+                "[$PACKAGE]: Ticket #$tid, restriction " .
+                "'$rule_name' on page '$callback_name' failed with fields: " .
+                join ', ', @{$matches->{'match'}}
+            );
         }
     }
 
