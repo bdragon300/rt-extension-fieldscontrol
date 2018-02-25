@@ -19,9 +19,9 @@ while (my $ticket_id = shift @UpdateTicket) {
 	} elsif (my @e = @{$check->{errors}}) {
 		push @results, ':' if @results;
 		push @results, loc("ERROR: Ticket #[_1] request aborted because of following restrictions:", $ticket_id);
-		while (my $name = shift @e) {
+		while (my $r = shift @e) {
 			push @results, 
-				loc("~~> [_1]", $name),
+				loc("~~> [_1]", $r->{rulename}),
 				loc("~~~~~~> Failed fields: ~[ [_1] ~]", join(', ', map { loc($_) } @{shift @e}));
 		}
 	} else {

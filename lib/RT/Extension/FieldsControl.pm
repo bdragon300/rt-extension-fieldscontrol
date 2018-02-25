@@ -624,7 +624,8 @@ sub write_config {
 Check given ticket across all rules. This is main function called from Mason 
 callbacks when it triggered.
 
-Returns hash. 'errors' item contains failed rules and fields.
+Returns hash. 'errors' item contains failed rules and fields. Each rule hash
+takes from config.
 'tests_refer_to_ticket' set to 1 if some of tests in rules (either in 
 "Applies to" or "Fail if") refer to the current ticket field value. 
 Intended to avoid situation when the ticket was changed by someone after page 
@@ -649,7 +650,7 @@ Returns:
 =over
 
 =item HASHREF -- 
-{errors => [$rule_name1, \@failed_fields1, ...], tests_refer_to_ticket => 1|0}
+{errors => [$rule1, \@failed_fields1, ...], tests_refer_to_ticket => 1|0}
 
 =back
 
@@ -722,13 +723,12 @@ sub check_ticket {
             unless exists($aggreg_types->{$rf_aggreg_type});
         $aggreg_res = $aggreg_types->{$rf_aggreg_type}->($matches);
 
-        my $rule_name = $rule->{'rulename'};
         if ($aggreg_res == 1) {
-            push @{$errors->{errors}}, $rule_name, [@{$matches->{'match'}}];
+            push @{$errors->{errors}}, $rule, [@{$matches->{'match'}}];
             my $tid = $ticket->id;
             RT::Logger->info(
-                "[$PACKAGE]: Ticket #$tid, restriction " .
-                "'$rule_name' on page '$callback_name' failed with fields: " .
+                "[$PACKAGE]: Ticket #$tid, restriction '" . $rule->{'rulename'}.
+                "' on page '$callback_name' failed with fields: " .
                 join ', ', @{$matches->{'match'}}
             );
         }
