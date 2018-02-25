@@ -110,6 +110,9 @@ if ($ARGS{'submit'}) {
     # Rule enabled
     $rule->{'enabled'} = (exists($ARGS{'enabled'}));
     
+    # Error message comment
+    $rule->{comment} = $ARGS{comment};
+
     # Check whether TicketSQL is correct
     my $val = $ARGS{searchsql};
     unless ($val) {

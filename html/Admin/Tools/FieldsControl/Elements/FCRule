@@ -18,6 +18,13 @@
             <label for="enabled"><&|/l&>Enabled</&></label>
         </div>
     </div>
+    <div class="elgrp">
+%       $val = (exists $data->{'comment'}) ? $data->{'comment'}: '';    
+        <div class="el">
+            <span class="label"><&|/l&>Comment (optional)</&></span>
+            <textarea cols="40" rows="3" name="comment" id="comment"><% $val %></textarea>
+        </div>
+    </div>
 </&>
 
 <&| /Widgets/TitleBox,title => loc('Applies to'), class=>'reject-rule', 'rolledup'=>0 &>
