@@ -35,7 +35,7 @@ if ($ARGSRef->{FCAbort}) {
 		push @$results, loc('ERROR: request aborted because of following restrictions:');
 		while (my $r = shift @e) {
 			push @$results, 
-				loc("~~> [_1]", $r->{rulename}),
+				"~> " . $r->{rulename},
 				loc("~~~~~~> Failed fields: ~[ [_1] ~]", join(', ', map { loc($_) } @{shift @e}));
 		}
 	}
