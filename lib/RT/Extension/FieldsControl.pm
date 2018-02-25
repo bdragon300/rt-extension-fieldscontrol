@@ -461,12 +461,21 @@ sub fill_txn_fields {
             }
 
         } else {
-            @arg_val = 
+            my @raw = 
                 map $ARGSRef->{$_},
                 grep /^Object-[:\w]+-[0-9]+-CustomField-${cf_id}-Value[^-]?$/, 
                 keys %$ARGSRef;
-            next unless (@arg_val);  # No such CF
+            next unless (@raw);  # No such CF
+
+            my $cf = $ticket->LoadCustomFieldByIdentifier( $cf_id );
+            next unless $cf->id;
+
+            @arg_val = normalize_object_custom_field_values(
+                CustomField => $cf, 
+                Value => $raw[0]
+            );
         }
+        
         $res->{$cf_abbr} = \@arg_val;
     }
 
