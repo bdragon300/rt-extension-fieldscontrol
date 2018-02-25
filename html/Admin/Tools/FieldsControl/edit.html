@@ -66,11 +66,15 @@ $config = [] unless (defined($config));
 
 $id += 0;
 $Create += 0;
-unless (defined($config->[$id]) || $Create) {
-    Abort(loc('ERROR: Invalid id'));
+
+my $offset = $id - 1;  # zero-based
+unless ($Create) {
+    if ($offset < 0 || ! defined($config->[$offset])) {
+        Abort(loc('ERROR: Invalid id'));
+    }
 }
 unless ($Create) {
-    $rule = $config->[$id];
+    $rule = $config->[$offset];
 }
 
 
@@ -84,7 +88,7 @@ my $filling = {
 
 
 if ($ARGS{'remove'}) {
-    splice(@$config, $id, 1);
+    splice(@$config, $offset, 1);
     my ($res, $msg) = RT::Extension::FieldsControl::write_config($config);
     if ($res) {
         push @results, loc('Restriction #[_1] removed', $id);
@@ -171,8 +175,8 @@ if ($ARGS{'submit'}) {
     }
 
     unless (@results) {
-        $id = scalar(@$config) if ($Create); 
-        $config->[$id] = {%$rule};
+        $offset = scalar(@$config) if ($Create); 
+        $config->[$offset] = {%$rule};
         my ($res, $msg) = RT::Extension::FieldsControl::write_config($config);
         if ($res) {
             push @results, loc('Configuration saved');

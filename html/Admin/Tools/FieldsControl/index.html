@@ -22,10 +22,12 @@ my $table_headers = [loc('#'), loc('Name'), loc('Checking fields'), loc('Status'
 
 my $i = 0;
 while (defined($config->[$i])) {
+    my $id = $i + 1;
+
     push @$table_rows, {
-        'link' => '/Admin/Tools/FieldsControl/edit.html?id=' . $i,
+        'link' => '/Admin/Tools/FieldsControl/edit.html?id=' . $id,
         'cols' => [
-            $i,
+            $id,
             $config->[$i]->{'rulename'},
             (join ', ', map {loc($_->{'field'})} @{$config->[$i]->{'rfields'}}),
             ($config->[$i]->{'enabled'} ? loc('Enabled') : loc('Disabled')) #loc
