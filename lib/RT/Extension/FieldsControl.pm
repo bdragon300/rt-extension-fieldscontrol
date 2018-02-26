@@ -475,7 +475,7 @@ sub fill_txn_fields {
                 Value => $raw[0]
             );
         }
-        
+
         $res->{$cf_abbr} = \@arg_val;
     }
 
@@ -537,7 +537,7 @@ sub get_transaction_type {
 }
 
 
-=head2 load_config() -> \%config
+=head2 load_config() -> %config
 
 Load configuration
 
@@ -549,9 +549,7 @@ Returns:
 
 =over
 
-=item HASHREF config
-
-=item (undef) if config does not exist
+=item HASH
 
 =back
 
@@ -560,28 +558,63 @@ Returns:
 sub load_config {
     my $attrs = RT::Attributes->new( $RT::SystemUser );
     $attrs->LimitToObject($RT::System);
-    $attrs->Limit(FIELD => 'Name', VALUE => 'FieldsControlConfig');
-    $attrs->OrderBy(FIELD => 'id', ORDER => 'DESC');
+    $attrs->Limit(FIELD => 'Name', VALUE => 'FieldsControlRestriction');
+    $attrs->OrderBy(FIELD => 'id', ORDER => 'ASC');
 
-    my $cfg = ($attrs->Count > 0) ? $attrs->First->Content : undef;
-    if (ref($cfg) eq 'ARRAY') {
-        return $cfg;
-    } elsif (defined $cfg) {
-        RT::Logger->warning("[$PACKAGE]: Incorrect settings format in database");
+    my %config;
+
+    my %items;
+    while (my $attr = $attrs->Next) {
+        $items{$attr->id} = $attr->Content;
     }
-    return (undef);
+    $config{restrictions} = \%items;
+
+    return %config;
 }
 
+=head2 _find_attribute_by_id($id) -> $attribute_obj
 
-=head2 write_config(\%config)
-
-Write configuration. Delete duplicates if necessary
+Loads RT::Attribute with given id
 
 Parameters:
 
 =over
 
-=item config -- configuration HASHREF
+=item id
+
+=back
+
+Return:
+
+RT::Attribute object. If unable to load then empty object returned
+
+=cut
+
+sub _find_attribute_by_id {
+    my $id = shift;
+
+    my $attrs = RT::Attributes->new( RT::SystemUser );
+    $attrs->LimitToObject(RT::System);
+    $attrs->Limit(FIELD => 'Name', VALUE => 'FieldsControlRestriction');
+    $attrs->Limit(FIELD => 'id', VALUE => ($id || 0));
+
+    return $attrs->First || RT::Attribute->new( RT::SystemUser );
+}
+
+
+=head2 write_config(create_r => [], update_r => {}, delete_r => {})
+
+Write configuration
+
+Parameters:
+
+=over
+
+=item create_r -- Optional. ARRAYREF, restrictions to be created
+
+=item update_r -- Optional. HASHREF, restrictions to be updated
+
+=item delete_r -- Optional. HASHREF, restrictions to be deleted
 
 =back
 
@@ -589,42 +622,64 @@ Returns:
 
 =over
 
-=item (1, 'Status message') on success and (0, 'Error Message') on failure
+=item 1 on success, 0 when some errors happened
 
 =back
 
 =cut
 
 sub write_config {
-    my $config = shift;
+    my %args = (
+        create_r => [],
+        update_r => {},
+        delete_r => {},
+        @_
+    );
+    my $success = 1;
 
-    die "INTERNAL ERROR: [$PACKAGE]: saving config is not array. Something wrong in index.html"
-        if (ref $config ne 'ARRAY');
-
-    my $cfg = RT::Attributes->new( RT::SystemUser );
-    $cfg->LimitToObject(RT::System);
-    $cfg->OrderBy(FIELD => 'id', ORDER => 'DESC');
-    my @all_attrs = $cfg->Named('FieldsControlConfig');
-    my $new_cfg = shift @all_attrs if @all_attrs;
-    foreach (@all_attrs) {
-        $_->Delete;
-    }
-    unless ($new_cfg) {
-        $new_cfg = RT::Attribute->new( RT::SystemUser );
-        my $res = $new_cfg->Create(
-            Name => 'FieldsControlConfig',
-            Description => 'RT::Extension::FieldsControl configuration',
+    foreach my $r (@{$args{create_r}}) {
+        my $record = RT::Attribute->new( RT::SystemUser );
+        $record->Create(
+            Name => 'FieldsControlRestriction',
+            Description => 'RT::Extension::FieldsControl restriction',
             ContentType => 'storable',
             Object => RT::System
         );
+        my ($res, $msg) = $record->SetContent($r);
 
-        unless ( $res ) {
-            RT::Logger->error("[$PACKAGE]: Error while writing settings");
-            return $res;
+        unless ($res) {
+            RT::Logger->error(
+                "[$PACKAGE]: Unable to create RT::Attribute: $msg"
+            );
+            $success = 0;
         }
     }
 
-    return $new_cfg->SetContent($config);
+    foreach my $id (keys %{$args{update_r}}) {
+        my $record = _find_attribute_by_id($id);
+        if ($record->id) {
+            $record->SetContent($args{update_r}->{$id});
+        } else {
+            RT::Logger->error(
+                "[$PACKAGE]: Unable to update RT::Attribute id=" . $id
+            );
+            $success = 0;
+        }
+    }
+
+    foreach my $id (keys %{$args{delete_r}}) {
+        my $record = _find_attribute_by_id($id);
+        if ($record->id) {
+            $record->Delete;
+        } else {
+            RT::Logger->error("[$PACKAGE]: Unable to delete non-existent " .
+                "RT::Attribute id=" . $id);
+            $success = 0;
+        }
+    }
+    
+    RT::Logger->info("[$PACKAGE]: Config written successfull") if ($success);
+    return $success;
 }
 
 
@@ -675,14 +730,15 @@ sub check_ticket {
         tests_refer_to_ticket => 0
     };
 
-    my $config = load_config;
-    return $errors unless $config; # No rules
+    my %config = load_config;
+    my %restrictions = %{$config{restrictions}};
+    return $errors unless %restrictions; # No rules
 
     my $fields = get_fields_list;
     my $txn_values = fill_txn_fields($fields, $ticket, $ARGSRef, $callback_name);
     my $ticket_values = fill_ticket_fields($fields, $ticket);
 
-    foreach my $rule (@{$config}) {
+    foreach my $rule (values %restrictions) {
         next unless ($rule->{'enabled'});
 
         # Ticket match TicketSQL ("Old state")

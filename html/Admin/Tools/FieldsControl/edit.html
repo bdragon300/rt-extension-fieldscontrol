@@ -58,23 +58,18 @@ unless ($session{'CurrentUser'}->HasRight( Object=> $RT::System, Right => 'Super
     Abort(loc('This feature is only available to system administrators'));
 }
 
-my $config = RT::Extension::FieldsControl::load_config;
+my %config = RT::Extension::FieldsControl::load_config;
+my $restrictions = $config{restrictions};
 my @results;
-my $rule = {};
-
-$config = [] unless (defined($config));
 
 $id += 0;
 $Create += 0;
 
-my $offset = $id - 1;  # zero-based
+my $rule = $restrictions->{$id};
 unless ($Create) {
-    if ($offset < 0 || ! defined($config->[$offset])) {
+    unless ($rule) {
         Abort(loc('ERROR: Invalid id'));
     }
-}
-unless ($Create) {
-    $rule = $config->[$offset];
 }
 
 
@@ -88,12 +83,11 @@ my $filling = {
 
 
 if ($ARGS{'remove'}) {
-    splice(@$config, $offset, 1);
-    my ($res, $msg) = RT::Extension::FieldsControl::write_config($config);
+    my $res = RT::Extension::FieldsControl::write_config(delete_r => {$id => $restrictions->{$id}});
     if ($res) {
         push @results, loc('Restriction #[_1] removed', $id);
     } else {
-        push @results, loc('ERROR: Cannot remove: [_1]', $msg);
+        push @results, loc('ERROR: Cannot remove restriction #[_1]. Contact your RT administrator');
     }
     MaybeRedirectForResults(
         Actions   => \@results,
@@ -175,9 +169,13 @@ if ($ARGS{'submit'}) {
     }
 
     unless (@results) {
-        $offset = scalar(@$config) if ($Create); 
-        $config->[$offset] = {%$rule};
-        my ($res, $msg) = RT::Extension::FieldsControl::write_config($config);
+        my ($res, $msg);
+        if ($Create) {
+            ($res, $msg) = RT::Extension::FieldsControl::write_config(create_r => [$rule]);
+        } else {
+            ($res, $msg) = RT::Extension::FieldsControl::write_config(update_r => {$id => $rule});
+        }
+
         if ($res) {
             push @results, loc('Configuration saved');
         } else {

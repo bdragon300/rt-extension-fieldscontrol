@@ -30,8 +30,8 @@ msgstr "Ограничение FieldsControl"
 msgid "Restriction #%1 removed"
 msgstr "Ограничение #%1 удалено"
 
-msgid "ERROR: Cannot remove: %1"
-msgstr "ОШИБКА: Невозможно удалить: %1"
+msgid "ERROR: Cannot remove restriction #%1. Contact your RT administrator"
+msgstr "ОШИБКА: Невозможно удалить ограничение #%1. Обратитесь к своему администратору RT"
 
 msgid "ERROR: Name field is required"
 msgstr "ОШИБКА: Поле Имя обязательно для заполнения"

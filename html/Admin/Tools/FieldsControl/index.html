@@ -13,26 +13,23 @@ unless ($session{'CurrentUser'}->HasRight( Object=> $RT::System, Right => 'Super
 
 use Data::Dumper qw(Dumper);
 
-my $config = RT::Extension::FieldsControl::load_config;
+my %config = RT::Extension::FieldsControl::load_config;
+my $restrictions = $config{restrictions};
 my @results;
 
 # Fill data for CollectionTable
 my $table_rows = [];
 my $table_headers = [loc('#'), loc('Name'), loc('Checking fields'), loc('Status')];
 
-my $i = 0;
-while (defined($config->[$i])) {
-    my $id = $i + 1;
-
+foreach my $id (keys %$restrictions) {
     push @$table_rows, {
         'link' => '/Admin/Tools/FieldsControl/edit.html?id=' . $id,
         'cols' => [
             $id,
-            $config->[$i]->{'rulename'},
-            (join ', ', map {loc($_->{'field'})} @{$config->[$i]->{'rfields'}}),
-            ($config->[$i]->{'enabled'} ? loc('Enabled') : loc('Disabled')) #loc
+            $restrictions->{$id}->{'rulename'},
+            (join ', ', map {loc($_->{'field'})} @{$restrictions->{$id}->{'rfields'}}),
+            ($restrictions->{$id}->{'enabled'} ? loc('Enabled') : loc('Disabled')) #loc
         ],
     };
-    $i++;
 }
 </%init>
