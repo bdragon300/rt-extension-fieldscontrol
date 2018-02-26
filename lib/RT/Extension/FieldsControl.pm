@@ -476,6 +476,8 @@ sub fill_txn_fields {
             );
         }
 
+        # Its needed to have at least one element to get op callback worked
+        push @arg_val, '' unless (@arg_val);
         $res->{$cf_abbr} = \@arg_val;
     }
 
