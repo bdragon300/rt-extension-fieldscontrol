@@ -618,6 +618,7 @@ sub get_txn_customroles {
         sort 
         map /^Role\.(.*)\.\w+$/, 
         @fields; 
+        
     foreach my $crname (@customroles) {
         # RT::CustomRole-id
         my ($crdbname) = $fields->{'Role.' . $crname . '.id'} =~ /^([^.]+)\./;  
@@ -626,7 +627,7 @@ sub get_txn_customroles {
 
         my @add_ids = (); my @delete_ids = ();
         my $single_value_cr = 0;
-;
+
         foreach my $k (keys %$ARGSRef) {
             # ModifyPeople.html, add principal
             if ($k =~ /^Ticket-AddWatcher-Principal-(\d+)$/) {
