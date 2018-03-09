@@ -458,7 +458,7 @@ sub fill_txn_fields {
                 map $ARGSRef->{$_},
                 grep /^Bulk-Delete-CustomField-${cf_id}-Value[^-]?$/, 
                 keys %$ARGSRef;
-            next unless (@to_delete || @to_add);  #FIXME: remove
+            
             my $cf = $ticket->LoadCustomFieldByIdentifier( $cf_id );
             next unless $cf->id;
             my $vals_collection = $cf->ValuesForObject($ticket);
@@ -618,7 +618,7 @@ sub get_txn_customroles {
         sort 
         map /^Role\.(.*)\.\w+$/, 
         @fields; 
-        
+
     foreach my $crname (@customroles) {
         # RT::CustomRole-id
         my ($crdbname) = $fields->{'Role.' . $crname . '.id'} =~ /^([^.]+)\./;  
