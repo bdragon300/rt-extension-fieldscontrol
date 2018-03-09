@@ -121,9 +121,6 @@ msgstr "Тикет.Тема"
 msgid "Ticket.Status"
 msgstr "Тикет.Статус"
 
-msgid "Ticket.OwnerId"
-msgstr "Тикет.Ответственный (ID)"
-
 msgid "Ticket.Priority"
 msgstr "Тикет.Приоритет"
 

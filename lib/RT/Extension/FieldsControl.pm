@@ -120,7 +120,6 @@ Some of these fields are set dynamically, e.g. Transaction.Type
 our $available_fields = {
     'Ticket.Subject'                => 'Subject',
     'Ticket.Status'                 => 'Status',
-    'Ticket.OwnerId'                => 'Owner',
     'Ticket.Priority'               => 'Priority',
     'Ticket.InitialPriority'        => 'InitialPriority',
     'Ticket.FinalPriority'          => 'FinalPriority',
@@ -152,7 +151,6 @@ value. These fields filled by old value if empty value will come from web page.
 
 #loc_left_pair
 our $empty_is_unchanged_fields = {
-    'Ticket.OwnerId'                => 'Owner',
     'Ticket.Status'                 => 'Status'
 };
 
@@ -327,9 +325,6 @@ sub fill_ticket_fields {
         $res->{$f} = $ticket->_Value($fld);
     }
 
-    # RT::Nobody means empty value for Ticket.OwnerId
-    $res->{'Ticket.OwnerId'} = '' if ($res->{'Ticket.OwnerId'} eq RT::Nobody->id);
-
     my $cfs = $ticket->CustomFields;
     while (my $cf = $cfs->Next) {
         my $cf_name = 'CF.' . $cf->Name;
@@ -406,9 +401,6 @@ sub fill_txn_fields {
 
     # "Current" values substitution that rules will be compared with
     #
-    # Ticket.OwnerId
-    # RT::Nobody means empty value
-    $res->{'Ticket.OwnerId'} = '' if ($res->{'Ticket.OwnerId'} eq RT::Nobody->id);
 
     foreach (grep /^Transaction./, keys %$fields) {
         $res->{$_} = $ARGSRef->{$fields->{$_}} if (defined $ARGSRef->{$fields->{$_}});
