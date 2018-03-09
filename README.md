@@ -23,6 +23,7 @@ The configuration UI available for users with SuperUser right.
 # Dependencies:
 
 * RT >= 4.0.0
+* experimental
 
 # Installation
 
