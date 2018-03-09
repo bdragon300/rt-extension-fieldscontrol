@@ -1,6 +1,6 @@
 # Summary
 
-RT::Extension::FieldsControl -- Conditional ticket/transaction fields validation
+RT::Extension::FieldsControl -- Conditional user input validation
 
 # Description
 
