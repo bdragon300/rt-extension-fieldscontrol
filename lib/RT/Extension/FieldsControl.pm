@@ -214,6 +214,15 @@ our $aggreg_types = {
 };
 
 
+=head2 @standard_ticket_roles
+
+Standard ticket roles such as Owner, Requestor, etc.
+
+=cut
+
+our @standard_ticket_roles = qw/Owner Requestor AdminCc Cc/;
+
+
 =head2 $custom_role_subfields
 
 Fields in each custom role member available to test on.
@@ -267,6 +276,14 @@ sub get_fields_list {
         my %fields = 
             map {
                 join('.', ('Role', $cr->Name, $_)) => 'RT::CustomRole-' . $cr->id . '.' . $_
+            } @$custom_role_subfields;
+        @crfields{keys %fields} = values %fields;
+    }
+    foreach my $role (@standard_ticket_roles) {
+        # 'Role.Name.<subfield>' => 'Name.<subfield>'
+        my %fields = 
+            map {
+                join('.', ('Role', $role, $_)) => "${role}.$_"
             } @$custom_role_subfields;
         @crfields{keys %fields} = values %fields;
     }
@@ -401,7 +418,7 @@ sub fill_txn_fields {
     $res = {
         %$res, 
         get_txn_customfields($fields, $ticket, $ARGSRef, $callback_name),
-        get_txn_customroles($fields, $ticket, $ARGSRef, $callback_name)
+        get_txn_roles($fields, $ticket, $ARGSRef, $callback_name)
     };
 
     return $res;
@@ -625,7 +642,7 @@ sub normalize_object_custom_field_values {
 }
 
 
-=head2 get_txn_customroles(\%fields, $ticket, \%ARGSRef, $callback_name) -> %customroles
+=head2 get_txn_roles(\%fields, $ticket, \%ARGSRef, $callback_name) -> %customroles
 
 Return Role.* fields came with request in ARGSRef
 
@@ -653,7 +670,7 @@ Returns:
 
 =cut
 
-sub get_txn_customroles {
+sub get_txn_roles {
     my $fields = shift;
     my $ticket = shift;
     my $ARGSRef = shift;
@@ -664,33 +681,33 @@ sub get_txn_customroles {
 
     # make unique
     my $p = '';
-    my @customroles = 
+    my @roles = 
         grep { ($p eq $_) ? undef : ($p = $_) } 
         sort 
         map /^Role\.(.*)\.\w+$/, 
         @fields; 
 
-    foreach my $crname (@customroles) {
+    foreach my $rolename (@roles) {
         # RT::CustomRole-id
-        my ($crdbname) = $fields->{'Role.' . $crname . '.id'} =~ /^([^.]+)\./;  
-        my $crgrp = $ticket->RoleGroup($crdbname);
-        next unless $crgrp->id;
+        my ($roledbname) = $fields->{'Role.' . $rolename . '.id'} =~ /^([^.]+)\./;  
+        my $rolegrp = $ticket->RoleGroup($roledbname);
+        next unless $rolegrp->id;
 
         my @add_ids = (); my @delete_ids = ();
-        my $single_value_cr = 0;
+        my $single_value_role = 0;
 
         foreach my $k (keys %$ARGSRef) {
             # ModifyPeople.html, add principal
             if ($k =~ /^Ticket-AddWatcher-Principal-(\d+)$/) {
-                push @add_ids, "$1" if $ARGSRef->{$k} eq $crdbname;
+                push @add_ids, "$1" if $ARGSRef->{$k} eq $roledbname;
 
             # ModifyPeople.html, delete principal
-            } elsif ($k =~ /^Ticket-DeleteWatcher-Type-${crdbname}-Principal-(\d+)$/ ) {
+            } elsif ($k =~ /^Ticket-DeleteWatcher-Type-${roledbname}-Principal-(\d+)$/ ) {
                 push @delete_ids, "$1" if $ARGSRef->{$k};
 
             # ModifyPeople.html, add user
             } elsif ($k =~ /^WatcherTypeEmail(\d+)$/ ) {
-                next if ($ARGSRef->{$k} ne $crdbname);
+                next if ($ARGSRef->{$k} ne $roledbname);
 
                 my $email = $ARGSRef->{"WatcherAddressEmail$1"};
                 my $user = load_custom_role_user($email);
@@ -699,7 +716,7 @@ sub get_txn_customroles {
                 push @add_ids, $user->PrincipalObj->id;
 
             # Bulk.html, delete/add user
-            } elsif ($k =~ /^((Add|Delete)${crdbname})$/) {
+            } elsif ($k =~ /^((Add|Delete)${roledbname})$/) {
                 my $name = $ARGSRef->{$k};
                 my $user = load_custom_role_user($name);
                 next unless $user->id;
@@ -711,9 +728,9 @@ sub get_txn_customroles {
                 }
 
             # ModifyPeople.html, Bulk.html, set single-user custom roles
-            } elsif ($k eq $crdbname) {
+            } elsif ($k eq $roledbname) {
                 my $name = $ARGSRef->{$k};
-                $single_value_cr = 1;  # TODO: rely on cr is_single prop
+                $single_value_role = 1;  # TODO: rely on cr is_single prop
 
                 if ($name eq '') {  # Nobody
                     @add_ids = ();
@@ -727,9 +744,9 @@ sub get_txn_customroles {
             }
         }
 
-        my $ticket_principals = $crgrp->MembersObj;
+        my $ticket_principals = $rolegrp->MembersObj;
         my @members = ();
-        if ( ! $single_value_cr) {
+        if ( ! $single_value_role) {
             @members = 
                 grep { ! ( $_->id ~~ @delete_ids ) }
                 map { $_->MemberObj->Object }
@@ -749,10 +766,10 @@ sub get_txn_customroles {
         }
 
         # Fill out subfields
-        my %crvals = ();
+        my %vals = ();
         foreach my $subf (@$custom_role_subfields) {
-            my $k = "Role.${crname}.${subf}";
-            $crvals{$k} = [];
+            my $k = "Role.${rolename}.${subf}";
+            $vals{$k} = [];
 
             foreach my $member (@members) {  # TODO: nobody means empty
                 my $val = undef;
@@ -763,11 +780,11 @@ sub get_txn_customroles {
                          && $subf ne 'id');
 
                 $val = $member->_Value($subf) // '';
-                push @{$crvals{$k}}, $val;
+                push @{$vals{$k}}, $val;
             }
-            push @{$crvals{$k}}, '' unless @{$crvals{$k}};
+            push @{$vals{$k}}, '' unless @{$vals{$k}};
         }
-        @res{keys %crvals} = values %crvals;
+        @res{keys %vals} = values %vals;
 
         undef @members;
     }
