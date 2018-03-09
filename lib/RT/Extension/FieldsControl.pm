@@ -734,6 +734,8 @@ sub get_txn_roles {
 
                 if ($name eq '') {  # Nobody
                     @add_ids = ();
+                } elsif ($roledbname eq 'Owner' && $name eq RT::Nobody->id) {
+                    @add_ids = ();
                 } else {
                     my $user = load_custom_role_user($name);
                     next unless $user->id;
@@ -771,7 +773,7 @@ sub get_txn_roles {
             my $k = "Role.${rolename}.${subf}";
             $vals{$k} = [];
 
-            foreach my $member (@members) {  # TODO: nobody means empty
+            foreach my $member (@members) {
                 my $val = undef;
 
                 # RT::Group has only limited subfields
