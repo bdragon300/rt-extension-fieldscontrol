@@ -378,7 +378,7 @@ sub normalize_object_custom_field_values {
         }
         grep defined, @values;
 
-    return @values;
+    return grep defined, @values;
 }
 
 
@@ -458,7 +458,7 @@ sub fill_txn_fields {
                 map $ARGSRef->{$_},
                 grep /^Bulk-Delete-CustomField-${cf_id}-Value[^-]?$/, 
                 keys %$ARGSRef;
-            
+
             my $cf = $ticket->LoadCustomFieldByIdentifier( $cf_id );
             next unless $cf->id;
             my $vals_collection = $cf->ValuesForObject($ticket);
@@ -477,8 +477,8 @@ sub fill_txn_fields {
                 my @to_add_n = normalize_object_custom_field_values(
                     CustomField => $cf, 
                     Value => $to_add[0]
-                );  #FIXME: returns undef
-                @arg_val = (@arg_val, @to_add_n);
+                );
+                push @arg_val, @to_add_n;
 
                 my $maxv = $cf->MaxValues;
                 if ($maxv == 1) {
@@ -506,6 +506,7 @@ sub fill_txn_fields {
 
         # Its needed to have at least one element to get op callback worked
         push @arg_val, '' unless (@arg_val);
+
         $res->{$cf_abbr} = \@arg_val;
     }
 
