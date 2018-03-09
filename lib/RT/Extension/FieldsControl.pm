@@ -19,18 +19,24 @@ RT::Extension::FieldsControl - Conditional ticket/transaction fields validation
 =head1 DESCRIPTION
 
 This extension validates ticket and transaction fields on each ticket update 
-according on preconfigured restrictions.
+according on preconfigured restrictions. In few words it controls user input 
+and prevents to get into a forbidden ticket state.
+Ticket fields, transaction fields, custom fields, custom role members can be 
+tested. The extension has Admin UI.
 
 Each restriction can be applied only to certain tickets using TicketSQL 
-selection and/or incoming fields value tests. In applicable restriction 
-the incoming fields value verifies using control tests. If control tests at 
-least in one restriction have failed then ticket update aborts and failed 
-restrictions appears in error message (with optional comments).
-Incoming fields value can be tested against to string, regular expression 
-or current field value.
+selection and/or "new state" tests. Extension verifies user input using 
+control tests only using applicable restrictions. If control tests at least 
+in one restriction have failed then ticket update aborts and failed 
+restrictions appears in error message (with optional comments). Such checks 
+performed at all modify pages.
 
-Thus you have flexible method to control the moving of certain tickets from 
-one "state" to another.
+Incoming data can be tested against to string, regular expression or current 
+field value.
+
+New state for every field means its value after successfull update. 
+For single-value fields it means just new value. For multi-value fields it 
+means current values + user input.
 
 Some examples:
 
@@ -53,7 +59,7 @@ either old or new CF.{InteractionType} value when Action executed.
 
 =back
 
-The extension has configuration UI available for users with SuperUser right.
+The configuration UI available for users with SuperUser right.
 
 =head1 INSTALLATION
 

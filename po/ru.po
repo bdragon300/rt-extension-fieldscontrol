@@ -66,8 +66,8 @@ msgstr "Применяется к"
 msgid "TicketSQL selection"
 msgstr "Выборка TicketSQL"
 
-msgid "Incoming data tests"
-msgstr "Проверка входящих данных"
+msgid "New ticket state tests"
+msgstr "Проверки нового состояния тикета"
 
 msgid "Add field"
 msgstr "Добавить поле"

@@ -4,12 +4,13 @@ RT::Extension::FieldsControl -- Conditional ticket/transaction fields validation
 
 # Description
 
-This extension validates ticket and transaction fields on each ticket update according on preconfigured restrictions.
+This extension validates ticket and transaction fields on each ticket update according on preconfigured restrictions. In few words it controls user input and prevents to get into a forbidden ticket state.
+Ticket fields, transaction fields, custom fields, custom role members can be tested. The extension has Admin UI.
 
-Each restriction can be applied only to certain tickets using TicketSQL selection and/or incoming fields value tests. In applicable restriction the incoming fields value verifies using control tests. If control tests at least in one restriction have failed then ticket update aborts and failed restrictions appears in error message (with optional comments).
-Incoming fields value can be tested against to string, regular expression or current field value.
+Each restriction can be applied only to certain tickets using TicketSQL selection and/or "new state" tests. Extension verifies user input using control tests only using applicable restrictions. If control tests at least in one restriction have failed then ticket update aborts and failed restrictions appears in error message (with optional comments). Such checks performed at all modify pages.
+Incoming data can be tested against to string, regular expression or current field value.
 
-Thus you have flexible method to control the moving of certain tickets from one "state" to another.
+New state for every field means its value after successfull update. For single-value fields it means just new value. For multi-value fields it means current values + user input.
 
 Some examples:
 * make required fields only for certain tickets (e.g. deny close incident (ticket in "support" queue with CF.{InteractionType}="Incident") with empty CF.{IncidentReason})
@@ -17,7 +18,7 @@ Some examples:
 * deny Correspond via web interface in closed tickets
 * deny simultaneous change CF.{InteractionType} and CF.{GenerateInvoice}. Useful when you have "trigger" CF (CF.{GenerateInvoice}) and appropriate Action (generate invoice depending on InteractionType). Reason is that RT does not guarantee the executing transactions in certain order, so you can get either old or new CF.{InteractionType} value when Action executed.
 
-The extension has configuration UI available for users with SuperUser right.
+The configuration UI available for users with SuperUser right.
 
 # Dependencies:
 
@@ -53,12 +54,12 @@ To configure restrictions go to *Admin->Tools->Fields Control* (you must have Su
 
 Each restriction consists of:
 * "Common" section -- restriction name, Enable checkbox;
-* "Applies to" section -- which tickets this restriction is applied to. Restriction will be applied if ticket satisfied to TicketSQL expression and if all (AND) or some (OR) incoming data tests will be passed (if any);
+* "Applies to" section -- which tickets this restriction is applied to. Restriction will be applied if ticket satisfied to TicketSQL expression and if all (AND) or some (OR) new state tests will be passed (if any);
 * "Fails if" section -- error will be raised if all (AND) or some (OR) tests will be passed.
 
 When user tries to update a ticket the following algorithm performs:
 1. Select only restrictions applicable to the current ticket among all enabled restrictions ("Applies to" section);
-2. Incoming page fields will be tested against "Fails if" section tests of all selected restrictions;
+2. New state will be tested against "Fails if" section tests of all selected restrictions;
 3. If "Fails if" section gives true, then the restriction considered as failed;
 4. If we have failed restrictions from previous step then show them all in the error message and abort ticket updating.
 

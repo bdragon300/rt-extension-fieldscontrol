@@ -37,7 +37,7 @@
 
 %           $val = (exists $data->{'sfieldsaggreg'}) ? $data->{'sfieldsaggreg'} : (keys %$aggreg_types)[0];
             <div class="el sfields-list field-list">
-                <span class="label"><&|/l&>Incoming data tests</&></span>
+                <span class="label"><&|/l&>New ticket state tests</&></span>
                 <fieldset>
                     <div class="ctlgrp">
 %                       foreach my $agtype (sort keys %$aggreg_types) {
@@ -77,7 +77,7 @@
 <&| /Widgets/TitleBox,title => loc('Fails if'), class=>'reject-rule', 'rolledup'=>0 &>
     <div class="elgrp">
         <div class="el rfields-list field-list">
-            <span class="label"><&|/l&>Incoming data tests</&></span>
+            <span class="label"><&|/l&>New ticket state tests</&></span>
             <fieldset>
                 <div class="ctlgrp">
 %               $val = (exists $data->{'rfieldsaggreg'}) ? $data->{'rfieldsaggreg'} : (keys %$aggreg_types)[0];
