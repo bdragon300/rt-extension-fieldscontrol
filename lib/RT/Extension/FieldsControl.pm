@@ -514,7 +514,7 @@ sub fill_txn_fields {
     $res = {
         %$res, get_txn_customroles($fields, $ticket, $ARGSRef, $callback_name)
     };
-    
+
     return $res;
 }
 
@@ -566,6 +566,8 @@ sub get_transaction_type {
         } else {
             $res = ['Bulk', 'Correspond', 'CustomField', 'Status', 'Set'];
         }
+    } elsif (ucfirst $callback_name eq 'ModifyPeople') {
+        $res = ['ModifyPeople'];
     }
 
     return $res;
