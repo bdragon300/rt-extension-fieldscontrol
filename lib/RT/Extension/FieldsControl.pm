@@ -207,6 +207,20 @@ our $aggreg_types = {
 };
 
 
+=head2 $custom_role_subfields
+
+Fields in each custom role member available to test on.
+Taken from RT::Tickets::SEARCHABLE_SUBFIELDS
+The list must contain only valid users/groups db table fields
+
+=cut
+
+our $custom_role_subfields = [qw(
+    EmailAddress Name RealName Nickname Organization Address1 Address2
+    City State Zip Country WorkPhone HomePhone MobilePhone PagerPhone id
+)];
+
+
 =head1 METHODS
 
 =head2 get_fields_list() -> \%fields
@@ -228,16 +242,30 @@ Returns:
 =cut
 
 sub get_fields_list {
-    my $res = {%$available_fields};
-
+    # CustomFields
     my $cfs = RT::CustomFields->new( RT::SystemUser );
     $cfs->Limit(FIELD => 'id', OPERATOR => '>=', VALUE => '0');
     $cfs->Limit(FIELD => 'lookuptype', OPERATOR => '=', VALUE => 'RT::Queue-RT::Ticket');
+    my %cffields = ();
     while (my $cf = $cfs->Next) {
-        $res->{'CF.' . $cf->Name} = $cf->id;
+        $cffields{'CF.' . $cf->Name} = $cf->id;
     }
 
-    return $res;
+    # CustomRoles
+    my $crs = RT::CustomRoles->new( RT::SystemUser );
+    $crs->Limit(FIELD => 'disabled', OPERATOR => '=', VALUE => '0');
+    my %crfields = ();
+    while (my $cr = $crs->Next) {
+        # 'Role.Name.<subfield>' => 'Name.<subfield>'
+        my %fields = 
+            map {
+                join('.', ('Role', $cr->Name, $_)) => 'RT::CustomRole-' . $cr->id . '.' . $_
+            } @$custom_role_subfields;
+        @crfields{keys %fields} = values %fields;
+    }
+
+    my %res = (%$available_fields, %cffields, %crfields);
+    return \%res;
 }
 
 
@@ -430,7 +458,7 @@ sub fill_txn_fields {
                 map $ARGSRef->{$_},
                 grep /^Bulk-Delete-CustomField-${cf_id}-Value[^-]?$/, 
                 keys %$ARGSRef;
-            next unless (@to_delete || @to_add);
+            next unless (@to_delete || @to_add);  #FIXME: remove
             my $cf = $ticket->LoadCustomFieldByIdentifier( $cf_id );
             next unless $cf->id;
             my $vals_collection = $cf->ValuesForObject($ticket);
@@ -449,14 +477,14 @@ sub fill_txn_fields {
                 my @to_add_n = normalize_object_custom_field_values(
                     CustomField => $cf, 
                     Value => $to_add[0]
-                );
+                );  #FIXME: returns undef
                 @arg_val = (@arg_val, @to_add_n);
 
                 my $maxv = $cf->MaxValues;
                 if ($maxv == 1) {
                     @arg_val = ($arg_val[-1])
                 } elsif ($maxv > 1) {
-                    @arg_val = grep { defined } @to_add_n[-$maxv..-1];
+                    @arg_val = grep { defined } @to_add_n[-$maxv..-1];  #FIXME: to_add_n->arg_val
                 }
             }
 
@@ -483,6 +511,10 @@ sub fill_txn_fields {
 
     $res->{'Transaction.Type'} = get_transaction_type($callback_name, $ARGSRef);
 
+    $res = {
+        %$res, get_txn_customroles($fields, $ticket, $ARGSRef, $callback_name)
+    };
+    
     return $res;
 }
 
@@ -508,6 +540,7 @@ ARRAYREF - Transaction.Type values
 =cut
 
 sub get_transaction_type {
+    #TODO: add modifypeople
     my $callback_name = shift;
     my $ARGSRef = shift;
 
@@ -536,6 +569,192 @@ sub get_transaction_type {
     }
 
     return $res;
+}
+
+
+=head2 get_txn_customroles(\%fields, $ticket, \%ARGSRef, $callback_name) -> %customroles
+
+Return Role.* fields came with request in ARGSRef
+
+Parameters:
+
+=over
+
+=item fields -- full fields list
+
+=item ticket -- ticket obj
+
+=item ARGSRef -- $ARGSRef hash from Mason with POST form data
+
+=item callback_name -- page causes the update, comes from Mason callback
+
+=back
+
+Returns:
+
+=over
+
+=item HASHREF {<Displaying name> => <value>}. <value> can be scalar or array
+
+=back
+
+=cut
+
+sub get_txn_customroles {
+    my $fields = shift;
+    my $ticket = shift;
+    my $ARGSRef = shift;
+    my $callback_name = shift;
+
+    my %res;
+    my @fields = grep /^Role\./, keys %$fields;
+
+    # make unique
+    my $p = '';
+    my @customroles = 
+        grep { ($p eq $_) ? undef : ($p = $_) } 
+        sort 
+        map /^Role\.(.*)\.\w+$/, 
+        @fields; 
+    foreach my $crname (@customroles) {
+        # RT::CustomRole-id
+        my ($crdbname) = $fields->{'Role.' . $crname . '.id'} =~ /^([^.]+)\./;  
+        my $crgrp = $ticket->RoleGroup($crdbname);
+        next unless $crgrp->id;
+
+        my @add_ids = (); my @delete_ids = ();
+        my $single_value_cr = 0;
+;
+        foreach my $k (keys %$ARGSRef) {
+            # ModifyPeople.html, add principal
+            if ($k =~ /^Ticket-AddWatcher-Principal-(\d+)$/) {
+                push @add_ids, "$1" if $ARGSRef->{$k} eq $crdbname;
+
+            # ModifyPeople.html, delete principal
+            } elsif ($k =~ /^Ticket-DeleteWatcher-Type-${crdbname}-Principal-(\d+)$/ ) {
+                push @delete_ids, "$1" if $ARGSRef->{$k};
+
+            # ModifyPeople.html, add user
+            } elsif ($k =~ /^WatcherTypeEmail(\d+)$/ ) {
+                next if ($ARGSRef->{$k} ne $crdbname);
+
+                my $email = $ARGSRef->{"WatcherAddressEmail$1"};
+                my $user = load_custom_role_user($email);
+                next unless $user->id;
+
+                push @add_ids, $user->PrincipalObj->id;
+
+            # Bulk.html, delete/add user
+            } elsif ($k =~ /^((Add|Delete)${crdbname})$/) {
+                my $name = $ARGSRef->{$k};
+                my $user = load_custom_role_user($name);
+                next unless $user->id;
+
+                if ($k =~ /^Delete/) {
+                    push @delete_ids, $user->PrincipalObj->id;
+                } elsif ($k =~ /^Add/) {
+                    push @add_ids, $user->PrincipalObj->id;
+                }
+
+            # ModifyPeople.html, Bulk.html, set single-user custom roles
+            } elsif ($k eq $crdbname) {
+                my $name = $ARGSRef->{$k};
+                $single_value_cr = 1;  # TODO: rely on cr is_single prop
+
+                if ($name eq '') {  # Nobody
+                    @add_ids = ();
+                } else {
+                    my $user = load_custom_role_user($name);
+                    next unless $user->id;
+
+                    @add_ids = ($user->PrincipalObj->id);
+                    last;
+                }
+            }
+        }
+
+        my $ticket_principals = $crgrp->MembersObj;
+        my @members = ();
+        if ( ! $single_value_cr) {
+            @members = 
+                grep { ! ( $_->id ~~ @delete_ids ) }
+                map { $_->MemberObj->Object }
+                @{$ticket_principals->ItemsArrayRef};
+        }
+        
+        if (@add_ids) {
+            my $add_principals = RT::Principals->new( RT::SystemUser );
+            $add_principals->Limit(
+                FIELD => 'id', 
+                OPERATOR => 'IN', 
+                VALUE => \@add_ids
+            );
+            push @members, 
+                map { $_->Object }
+                @{$add_principals->ItemsArrayRef};
+        }
+
+        # Fill out subfields
+        my %crvals = ();
+        foreach my $subf (@$custom_role_subfields) {
+            my $k = "Role.${crname}.${subf}";
+            $crvals{$k} = [];
+
+            foreach my $member (@members) {  # TODO: nobody means empty
+                my $val = undef;
+
+                # RT::Group has only limited subfields
+                next if (ref($member) eq 'RT::Group' 
+                         && $subf ne 'Name' 
+                         && $subf ne 'id');
+
+                $val = $member->_Value($subf) // '';
+                push @{$crvals{$k}}, $val;
+            }
+            push @{$crvals{$k}}, '' unless @{$crvals{$k}};
+        }
+        @res{keys %crvals} = values %crvals;
+
+        undef @members;
+    }
+
+    return %res;
+}
+
+
+=head2 load_custom_role_user($name) -> $user_obj
+
+Loads RT::User by given name. Name can be id, name, email
+
+Parameters:
+
+=over
+
+=item $name -- id, name, email of loaded RT::User
+
+=back
+
+Return:
+
+=over
+
+=item $user_obj -- loaded RT::User. Empty object if fail
+
+=back
+
+=cut
+
+sub load_custom_role_user {
+    my $name = shift;
+    my $user = RT::User->new(RT->SystemUser);
+
+    if ($name =~ /@/) {
+        $user->LoadByEmail( $name );
+    } else {
+        $user->Load( $name );
+    }
+
+    return $user;
 }
 
 
