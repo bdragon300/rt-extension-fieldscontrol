@@ -327,60 +327,6 @@ sub fill_ticket_fields {
     return $res;
 }
 
-=head2 normalize_object_custom_field_values(CustomField => $cf_obj, Value => $value) -> @values
-
-Split up and normalize custom field value incoming with request if needed. 
-Uses when custom field type allows to set multiple values in a single textarea
-field. To normalize means to clean redundant spaces, tabs.
-Honesty stolen from RT::Interface::Web::_NormalizeObjectCustomFieldValue with 
-some changes.
-
-Parameters:
-
-=over
-
-=item $cf_obj -- RT::CustomField object
-
-=item $value -- custom field value comes from page
-
-=back
-
-Returns:
-
-=over
-
-=item ARRAY -- values array
-
-=back
-
-=cut
-
-sub normalize_object_custom_field_values {
-    my %args = (
-        @_
-    );
-    my $cf_type = $args{CustomField}->Type;
-    my @values  = ();
-
-    if ( ref $args{'Value'} eq 'ARRAY' ) {
-        @values = @{ $args{'Value'} };
-    } elsif ( $cf_type =~ /text/i ) {    # Both Text and Wikitext
-        @values = ( $args{'Value'} );
-    } else {
-        @values = split /\r*\n/, $args{'Value'}
-            if defined $args{'Value'};
-    }
-    @values = grep length, map {
-        s/\r+\n/\n/g;
-        s/^\s+//;
-        s/\s+$//;
-        $_;
-        }
-        grep defined, @values;
-
-    return grep defined, @values;
-}
-
 
 =head2 fill_txn_fields(\%fields, $ticket, \%ARGSRef, $callback_name) -> \%filled_fields
 
@@ -443,6 +389,109 @@ sub fill_txn_fields {
     foreach (grep /^Transaction./, keys %$fields) {
         $res->{$_} = $ARGSRef->{$fields->{$_}} if (defined $ARGSRef->{$fields->{$_}});
     }
+    $res->{'Transaction.Type'} = get_transaction_type($callback_name, $ARGSRef);
+
+    $res = {
+        %$res, 
+        get_txn_customfields($fields, $ticket, $ARGSRef, $callback_name),
+        get_txn_customroles($fields, $ticket, $ARGSRef, $callback_name)
+    };
+
+    return $res;
+}
+
+
+=head2 get_transaction_type($callback_name, \%ARGSRef) -> \@transaction_type
+
+Return Transaction.Type values array for given data
+
+Parameters:
+
+=over
+
+=item $callback_name
+
+=item $ARGSRef
+
+=back
+
+Returns:
+
+ARRAYREF - Transaction.Type values
+
+=cut
+
+sub get_transaction_type {
+    #TODO: add modifypeople
+    my $callback_name = shift;
+    my $ARGSRef = shift;
+
+    my $res = [];
+
+    if (ucfirst $callback_name eq 'Update') {
+        if (exists $ARGSRef->{'UpdateType'}
+            && $ARGSRef->{'UpdateType'} eq 'private')
+        {
+            $res = ['Comment', 'Update', 'Status'];
+        } else {
+            $res = ['Correspond', 'Update', 'Reply', 'Status'];
+        }
+    } elsif (ucfirst $callback_name eq 'Modify') {
+        $res = ['Set', 'Basics', 'Modify', 'CustomField', 'Status'];
+    } elsif (ucfirst $callback_name eq 'ModifyAll') {
+        $res = ['Jumbo', 'ModifyAll', 'Status', 'Set'];
+    } elsif (ucfirst $callback_name eq 'Bulk') {
+        if (exists $ARGSRef->{'UpdateType'}
+            && $ARGSRef->{'UpdateType'} eq 'private')
+        {
+            $res = ['Bulk', 'Comment', 'CustomField', 'Status', 'Set'];
+        } else {
+            $res = ['Bulk', 'Correspond', 'CustomField', 'Status', 'Set'];
+        }
+    } elsif (ucfirst $callback_name eq 'ModifyPeople') {
+        $res = ['ModifyPeople'];
+    }
+
+    return $res;
+}
+
+
+=head2 get_txn_customfields(\%fields, $ticket, \%ARGSRef, $callback_name) -> %customfields
+
+Return CF.* fields came with request in ARGSRef
+
+Parameters:
+
+=over
+
+=item fields -- full fields list
+
+=item ticket -- ticket obj
+
+=item ARGSRef -- $ARGSRef hash from Mason with POST form data
+
+=item callback_name -- page causes the update, comes from Mason callback
+
+=back
+
+Returns:
+
+=over
+
+=item HASHREF {<Displaying name> => <value>}. <value> can be scalar or array
+
+=back
+
+=cut
+
+sub get_txn_customfields {
+    my $fields = shift;
+    my $ticket = shift;
+    my $ARGSRef = shift;
+    my $callback_name = shift;
+
+    my %res;
+
     foreach my $cf_abbr (grep /^CF./, keys %$fields) {
         my $cf_id = $fields->{$cf_abbr};
         my @arg_val = ();
@@ -507,71 +556,65 @@ sub fill_txn_fields {
         # Its needed to have at least one element to get op callback worked
         push @arg_val, '' unless (@arg_val);
 
-        $res->{$cf_abbr} = \@arg_val;
+        $res{$cf_abbr} = \@arg_val;
     }
 
-    $res->{'Transaction.Type'} = get_transaction_type($callback_name, $ARGSRef);
-
-    $res = {
-        %$res, get_txn_customroles($fields, $ticket, $ARGSRef, $callback_name)
-    };
-
-    return $res;
+    return %res;
 }
 
 
-=head2 get_transaction_type($callback_name, \%ARGSRef) -> \@transaction_type
+=head2 normalize_object_custom_field_values(CustomField => $cf_obj, Value => $value) -> @values
 
-Return Transaction.Type values array for given data
+Split up and normalize custom field value incoming with request if needed. 
+Uses when custom field type allows to set multiple values in a single textarea
+field. To normalize means to clean redundant spaces, tabs.
+Honesty stolen from RT::Interface::Web::_NormalizeObjectCustomFieldValue with 
+some changes.
 
 Parameters:
 
 =over
 
-=item $callback_name
+=item $cf_obj -- RT::CustomField object
 
-=item $ARGSRef
+=item $value -- custom field value comes from page
 
 =back
 
 Returns:
 
-ARRAYREF - Transaction.Type values
+=over
+
+=item ARRAY -- values array
+
+=back
 
 =cut
 
-sub get_transaction_type {
-    #TODO: add modifypeople
-    my $callback_name = shift;
-    my $ARGSRef = shift;
+sub normalize_object_custom_field_values {
+    my %args = (
+        @_
+    );
+    my $cf_type = $args{CustomField}->Type;
+    my @values  = ();
 
-    my $res = [];
-
-    if (ucfirst $callback_name eq 'Update') {
-        if (exists $ARGSRef->{'UpdateType'}
-            && $ARGSRef->{'UpdateType'} eq 'private')
-        {
-            $res = ['Comment', 'Update', 'Status'];
-        } else {
-            $res = ['Correspond', 'Update', 'Reply', 'Status'];
-        }
-    } elsif (ucfirst $callback_name eq 'Modify') {
-        $res = ['Set', 'Basics', 'Modify', 'CustomField', 'Status'];
-    } elsif (ucfirst $callback_name eq 'ModifyAll') {
-        $res = ['Jumbo', 'ModifyAll', 'Status', 'Set'];
-    } elsif (ucfirst $callback_name eq 'Bulk') {
-        if (exists $ARGSRef->{'UpdateType'}
-            && $ARGSRef->{'UpdateType'} eq 'private')
-        {
-            $res = ['Bulk', 'Comment', 'CustomField', 'Status', 'Set'];
-        } else {
-            $res = ['Bulk', 'Correspond', 'CustomField', 'Status', 'Set'];
-        }
-    } elsif (ucfirst $callback_name eq 'ModifyPeople') {
-        $res = ['ModifyPeople'];
+    if ( ref $args{'Value'} eq 'ARRAY' ) {
+        @values = @{ $args{'Value'} };
+    } elsif ( $cf_type =~ /text/i ) {    # Both Text and Wikitext
+        @values = ( $args{'Value'} );
+    } else {
+        @values = split /\r*\n/, $args{'Value'}
+            if defined $args{'Value'};
     }
+    @values = grep length, map {
+        s/\r+\n/\n/g;
+        s/^\s+//;
+        s/\s+$//;
+        $_;
+        }
+        grep defined, @values;
 
-    return $res;
+    return grep defined, @values;
 }
 
 
