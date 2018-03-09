@@ -484,7 +484,7 @@ sub fill_txn_fields {
                 if ($maxv == 1) {
                     @arg_val = ($arg_val[-1])
                 } elsif ($maxv > 1) {
-                    @arg_val = grep { defined } @to_add_n[-$maxv..-1];  #FIXME: to_add_n->arg_val
+                    @arg_val = grep { defined } @arg_val[-$maxv..-1];
                 }
             }
 
