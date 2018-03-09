@@ -20,6 +20,7 @@ no_index:
     - html
 requires:
   perl: 5.8.3
+  experimental: 0
 resources:
   license: http://dev.perl.org/licenses/
 version: '0.1'

@@ -7,6 +7,7 @@ use RT::Tickets;
 use RT::Attributes;
 use RT::CustomField;
 use Data::Dumper qw(Dumper);
+use experimental 'smartmatch';
 
 our $VERSION = '0.1';
 our $PACKAGE = __PACKAGE__;
