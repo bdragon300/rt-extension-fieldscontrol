@@ -669,19 +669,15 @@ sub get_txn_roles {
     my $callback_name = shift;
 
     my %res;
-    my @fields = grep /^Role\./, keys %$fields;
 
-    # make unique
-    my $p = '';
-    my @roles = 
-        grep { ($p eq $_) ? undef : ($p = $_) } 
-        sort 
-        map /^Role\.(.*)\.\w+$/, 
-        @fields; 
+    # CustomRoleName => RT::CustomRole-id
+    my %roles = 
+        map { /^Role\.(.*)\.\w+$/ => ($fields->{$_} =~ /^([^.]+)\./) } 
+        grep { /^Role\./ }
+        keys %$fields;
 
-    foreach my $rolename (@roles) {
-        # RT::CustomRole-id
-        my ($roledbname) = $fields->{'Role.' . $rolename . '.id'} =~ /^([^.]+)\./;  
+    foreach my $rolename (keys %roles) {
+        my $roledbname = $roles{$rolename};  
         my $rolegrp = $ticket->RoleGroup($roledbname);
         next unless $rolegrp->id;
 
@@ -1017,12 +1013,18 @@ sub check_ticket {
     };
 
     my %config = load_config;
-    my %restrictions = %{$config{restrictions}};
+    my %restrictions = %{$config{restrictions}};  # RT::Attribute id => Content
     return $errors unless %restrictions; # No rules
 
-    my $fields = get_fields_list;
-    my $txn_values = fill_txn_fields($fields, $ticket, $ARGSRef, $callback_name);
-    my $ticket_values = fill_ticket_fields($fields, $ticket);
+    # Work only with fields that actually used in restrictions
+    my $all_fields = get_fields_list;
+    my %fields = 
+        map { $_->{field} => $all_fields->{$_->{field}} }
+        map { (@{$_->{rfields}}, @{$_->{sfields}}) }
+        values %restrictions;
+
+    my $txn_values = fill_txn_fields(\%fields, $ticket, $ARGSRef, $callback_name);
+    my $ticket_values = fill_ticket_fields(\%fields, $ticket);
 
     foreach my $rule (values %restrictions) {
         next unless ($rule->{'enabled'});
@@ -1069,7 +1071,6 @@ sub check_ticket {
         }
         my $rvalues = {%$ticket_values, %$txn_values};
         $matches = check_txn_fields($rvalues, $rule->{'rfields'});
-
         die "INTERNAL ERROR: [$PACKAGE] incorrect config in database. Reconfigure please." 
             unless exists($aggreg_types->{$rf_aggreg_type});
         $aggreg_res = $aggreg_types->{$rf_aggreg_type}->($matches);
