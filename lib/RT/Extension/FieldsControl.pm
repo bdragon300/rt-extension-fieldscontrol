@@ -524,7 +524,8 @@ sub get_txn_customfields {
                 grep /^Bulk-Delete-CustomField-${cf_id}-Value[^-]?$/, 
                 keys %$ARGSRef;
 
-            my $cf = $ticket->LoadCustomFieldByIdentifier( $cf_id );
+            my $cf = RT::CustomField->new( RT->SystemUser );
+            $cf->Load($cf_id);
             next unless $cf->id;
             my $vals_collection = $cf->ValuesForObject($ticket);
 
@@ -560,7 +561,8 @@ sub get_txn_customfields {
                 keys %$ARGSRef;
             next unless (@raw);  # No such CF
 
-            my $cf = $ticket->LoadCustomFieldByIdentifier( $cf_id );
+            my $cf = RT::CustomField->new( RT->SystemUser );
+            $cf->Load($cf_id);
             next unless $cf->id;
 
             @arg_val = normalize_object_custom_field_values(
