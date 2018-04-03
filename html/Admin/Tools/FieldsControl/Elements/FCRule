@@ -29,6 +29,10 @@
 
 <&| /Widgets/TitleBox,title => loc('Applies to'), class=>'reject-rule', 'rolledup'=>0 &>
     <div class="elgrp">
+            <div>
+                <input type="checkbox" name="applyoncreate" id="apply-on-create" <% ( ! exists $data->{'applyoncreate'} || $data->{'applyoncreate'} ) ? 'checked': '' %> />
+                <label for="apply-on-create"><% loc('Apply on create')%></label>
+            </div>
 %           $val = (exists $data->{'searchsql'}) ? $data->{'searchsql'}: '';
             <div class="el">
                 <span class="label"><&|/l&>TicketSQL selection</&></span>

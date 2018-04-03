@@ -111,6 +111,9 @@ if ($ARGS{'submit'}) {
     # Error message comment
     $rule->{comment} = $ARGS{comment};
 
+    # Apply also on create
+    $rule->{applyoncreate} = defined $ARGS{applyoncreate};
+
     # Check whether TicketSQL is correct
     my $val = $ARGS{searchsql};
     unless ($val) {

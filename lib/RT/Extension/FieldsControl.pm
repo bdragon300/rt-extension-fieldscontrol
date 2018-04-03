@@ -393,7 +393,8 @@ sub fill_txn_fields {
         # If empty then retrieve it from TicketObj
         if (exists($empty_is_unchanged_fields->{$_})
             && defined($res->{$_})
-            && ($res->{$_} eq ''))
+            && ($res->{$_} eq '')
+            && $ticket)
         {
             $res->{$_} = $ticket->_Value($empty_is_unchanged_fields->{$_});
         }
@@ -410,7 +411,7 @@ sub fill_txn_fields {
     $res = {
         %$res, 
         get_txn_customfields($fields, $ticket, $ARGSRef, $callback_name),
-        get_txn_roles($fields, $ticket, $ARGSRef, $callback_name)
+        get_txn_roles($fields, $ticket, $ARGSRef, $callback_name)  # FIXME: call only when user able to change roles
     };
 
     return $res;
@@ -557,7 +558,7 @@ sub get_txn_customfields {
         } else {
             my @raw = 
                 map $ARGSRef->{$_},
-                grep /^Object-[:\w]+-[0-9]+-CustomField-${cf_id}-Value[^-]?$/, 
+                grep /^Object-[:\w]+-[0-9]*-CustomField-${cf_id}-Value[^-]?$/, 
                 keys %$ARGSRef;
             next unless (@raw);  # No such CF
 
@@ -679,12 +680,22 @@ sub get_txn_roles {
         keys %$fields;
 
     foreach my $rolename (keys %roles) {
-        my $roledbname = $roles{$rolename};  
-        my $rolegrp = $ticket->RoleGroup($roledbname);
-        next unless $rolegrp->id;
+        #TODO: skip role if its not applied to the current queue
+        my $roledbname = $roles{$rolename};
 
-        my @add_ids = (); my @delete_ids = ();
-        my $single_value_role = 0;
+        my $rolegrp;
+        if ($ticket) {  # Skip if Create page caused check
+            $rolegrp = $ticket->RoleGroup($roledbname);
+            next unless $rolegrp->id;
+        }
+
+        # If role is multi-value then firstly retrieve current principals and 
+        # then apply changes (add/remove principals)
+        # If role is single-value CustomRole or such as Owner then simply
+        # replace old principal with new one
+        # Create.html passes only new principal values
+        my @add_ids = (); my @delete_ids = (); my @add_principals = ();
+        my $ticket_principals = 1;  # Append current ticket principals to a result
 
         foreach my $k (keys %$ARGSRef) {
             # ModifyPeople.html, add principal
@@ -703,7 +714,7 @@ sub get_txn_roles {
                 my $user = load_custom_role_user($email);
                 next unless $user->id;
 
-                push @add_ids, $user->PrincipalObj->id;
+                push @add_principals, $user->PrincipalObj;
 
             # Bulk.html, delete/add user
             } elsif ($k =~ /^((Add|Delete)${roledbname})$/) {
@@ -714,36 +725,52 @@ sub get_txn_roles {
                 if ($k =~ /^Delete/) {
                     push @delete_ids, $user->PrincipalObj->id;
                 } elsif ($k =~ /^Add/) {
-                    push @add_ids, $user->PrincipalObj->id;
+                    push @add_principals, $user->PrincipalObj;
                 }
 
-            # ModifyPeople.html, Bulk.html, set single-user custom roles
-            } elsif ($k eq $roledbname) {
+            # Create.html, ModifyPeople.html, Bulk.html, set single-user custom roles
+            # Create.html passes also 'Requestors' key
+            } elsif ($k =~ /^${roledbname}s?$/) {
+                $ticket_principals = 0;  # Replace current ticket principals on new ones
+                @add_ids = ();
                 my $name = $ARGSRef->{$k};
-                $single_value_role = 1;  # TODO: rely on cr is_single prop
 
-                if ($name eq '') {  # Nobody
-                    @add_ids = ();
+                if ($name eq '') {
+                    # Nobody if custom role
+                    @add_principals = ();
+                    # 'Unchanged' if Owner
+                    $ticket_principals = 1 if ($roledbname eq 'Owner');
                 } elsif ($roledbname eq 'Owner' && $name eq RT::Nobody->id) {
-                    @add_ids = ();
+                    @add_principals = ();
                 } else {
-                    my $user = load_custom_role_user($name);
-                    next unless $user->id;
+                    my @names = split /,/, $name;  # Create.html
+                    while (my $name = shift @names) {
+                        $name = $name =~ s/^\s+|\s+$//gr;  # / trim
+                        my $user = load_custom_role_user($name);
+                        next unless $user->id;
 
-                    @add_ids = ($user->PrincipalObj->id);
-                    last;
+                        push @add_principals, $user->PrincipalObj;
+                    }
                 }
+
+                # TODO: limit principals to 1 if role.is_single
+                last;
             }
         }
 
-        my $ticket_principals = $rolegrp->MembersObj;
         my @members = ();
-        if ( ! $single_value_role) {
+        
+        # RT firstly excludes deleting principals from result, then appends 
+        # adding ones. Do the same.
+        if ($ticket && $ticket_principals) {
+            my $ticket_principals = $rolegrp->MembersObj;
             @members = 
                 grep { ! ( $_->id ~~ @delete_ids ) }
                 map { $_->MemberObj->Object }
                 @{$ticket_principals->ItemsArrayRef};
         }
+
+        push @members, map { $_->Object } @add_principals;
         
         if (@add_ids) {
             my $add_principals = RT::Principals->new( RT::SystemUser );
@@ -779,6 +806,7 @@ sub get_txn_roles {
         @res{keys %vals} = values %vals;
 
         undef @members;
+        undef @add_principals;
     }
 
     return %res;
@@ -1005,7 +1033,6 @@ Returns:
 =cut
 
 sub check_ticket {
-
     my $ticket = shift;
     my $ARGSRef = shift;
     my $callback_name = shift;
@@ -1026,13 +1053,14 @@ sub check_ticket {
         values %restrictions;
 
     my $txn_values = fill_txn_fields(\%fields, $ticket, $ARGSRef, $callback_name);
-    my $ticket_values = fill_ticket_fields(\%fields, $ticket);
+    my $ticket_values = ($ticket) ? fill_ticket_fields(\%fields, $ticket) : {};
 
     foreach my $rule (values %restrictions) {
         next unless ($rule->{'enabled'});
+        next if ($callback_name eq 'Create' && ! $rule->{applyoncreate});
 
         # Ticket match TicketSQL ("Old state")
-        my $res = find_ticket($ticket, $rule->{'searchsql'});
+        my $res = ($ticket) ? find_ticket($ticket, $rule->{'searchsql'}) : 1;
         next unless $res;
 
         my $sf_aggreg_type = $rule->{'sfieldsaggreg'};
@@ -1041,14 +1069,13 @@ sub check_ticket {
         # Substitute special tags in sfields values
         foreach (@{$rule->{'sfields'}}) {
             if ($_->{'value'} eq '__old__') {
-                if (exists($ticket_values->{$_->{'field'}})) {
+                if (exists($ticket_values->{$_->{'field'}})) {  # FIXME: what if !exists? Leave '__old__'?
                     $_->{'value'} = $ticket_values->{$_->{'field'}};
                 }
                 $errors->{tests_refer_to_ticket} = 1;
             }
         }
         my $matches = check_txn_fields($txn_values, $rule->{'sfields'});
-
         die "INTERNAL ERROR: [$PACKAGE] incorrect config in database. Reconfigure please." 
             unless exists($aggreg_types->{$sf_aggreg_type});
         my $aggreg_res = $aggreg_types->{$sf_aggreg_type}->($matches);
@@ -1065,7 +1092,7 @@ sub check_ticket {
         # Substitute special tags in rfields values
         foreach (@{$rule->{'rfields'}}) {
             if ($_->{'value'} eq '__old__') {
-                if (exists($ticket_values->{$_->{'field'}})) {
+                if (exists($ticket_values->{$_->{'field'}})) {  # FIXME: what if !exists? Leave '__old__'?
                     $_->{'value'} = $ticket_values->{$_->{'field'}};
                 }
                 $errors->{tests_refer_to_ticket} = 1;
@@ -1079,7 +1106,7 @@ sub check_ticket {
 
         if ($aggreg_res == 1) {
             push @{$errors->{errors}}, $rule, [@{$matches->{'match'}}];
-            my $tid = $ticket->id;
+            my $tid = ($ticket) ? $ticket->id : 'new';
             RT::Logger->info(
                 "[$PACKAGE]: Ticket #$tid, restriction '" . $rule->{'rulename'}.
                 "' on page '$callback_name' failed with fields: " .
