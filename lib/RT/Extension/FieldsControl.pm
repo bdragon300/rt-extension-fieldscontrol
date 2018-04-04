@@ -1057,7 +1057,7 @@ sub check_ticket {
 
     foreach my $rule (values %restrictions) {
         next unless ($rule->{'enabled'});
-        next if ($callback_name eq 'Create' && ! $rule->{applyoncreate});
+        next if ($callback_name eq 'Create' && ! $rule->{on_create});
 
         # Ticket match TicketSQL ("Old state")
         my $res = ($ticket) ? find_ticket($ticket, $rule->{'searchsql'}) : 1;

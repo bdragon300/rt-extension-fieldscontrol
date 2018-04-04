@@ -111,8 +111,8 @@ if ($ARGS{'submit'}) {
     # Error message comment
     $rule->{comment} = $ARGS{comment};
 
-    # Apply also on create
-    $rule->{applyoncreate} = defined $ARGS{applyoncreate};
+    # On which pages to apply
+    $rule->{on_create} = defined $ARGS{on_create};
 
     # Check whether TicketSQL is correct
     my $val = $ARGS{searchsql};
