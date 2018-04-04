@@ -235,6 +235,9 @@ our $custom_role_subfields = [qw(
 )];
 
 
+# All pages we spy on
+our @spy_pages = qw/Create Update Modify ModifyAll ModifyPeople Bulk/;
+
 =head1 METHODS
 
 =head2 get_fields_list() -> \%fields
@@ -1057,7 +1060,7 @@ sub check_ticket {
 
     foreach my $rule (values %restrictions) {
         next unless ($rule->{'enabled'});
-        next if ($callback_name eq 'Create' && ! $rule->{on_create});
+        next unless ($callback_name ~~ $rule->{apply_pages});  # Not applied on page caused request
 
         # Ticket match TicketSQL ("Old state")
         my $res = ($ticket) ? find_ticket($ticket, $rule->{'searchsql'}) : 1;

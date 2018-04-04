@@ -63,6 +63,9 @@ msgstr "Общее"
 msgid "Applies to"
 msgstr "Применяется к"
 
+msgid "Pages"
+msgstr "Страницы"
+
 msgid "TicketSQL selection"
 msgstr "Выборка TicketSQL"
 

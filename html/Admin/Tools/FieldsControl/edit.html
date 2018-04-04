@@ -111,8 +111,13 @@ if ($ARGS{'submit'}) {
     # Error message comment
     $rule->{comment} = $ARGS{comment};
 
-    # On which pages to apply
-    $rule->{on_create} = defined $ARGS{on_create};
+    # Apply restriction on pages
+    my @apply_pages = ();
+    foreach my $page (@RT::Extension::FieldsControl::spy_pages) {
+        my $k = 'on-' . lc $page;
+        push @apply_pages, $page if (exists $ARGS{$k} && defined $ARGS{$k});
+    }
+    $rule->{apply_pages} = \@apply_pages;
 
     # Check whether TicketSQL is correct
     my $val = $ARGS{searchsql};

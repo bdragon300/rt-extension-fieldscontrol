@@ -1,3 +1,4 @@
+% use experimental 'smartmatch';
 % my $val;
 %  my $field_data = {
 %   fields => $filling->{'fields'},
@@ -29,9 +30,16 @@
 
 <&| /Widgets/TitleBox,title => loc('Applies to'), class=>'reject-rule', 'rolledup'=>0 &>
     <div class="elgrp">
-            <div>
-                <input type="checkbox" name="on_create" id="on-create" <% ( ! exists $data->{'on_create'} || $data->{'on_create'} ) ? 'checked': '' %> />
-                <label for="on-create"><% loc('Create')%></label>
+            <div class="el">
+                <span class="label"><&|/l&>Pages</&></span>
+                <fieldset>
+%                   foreach my $page (@RT::Extension::FieldsControl::spy_pages) {
+                        <div>
+                            <input type="checkbox" name="on-<% lc $page %>" id="on-<% lc $page %>" <% ( ! exists $data->{apply_pages} || $page ~~ $data->{apply_pages} ) ? 'checked': '' %> />
+                            <label for="on-<% lc $page %>"><% $page %>.html</label>
+                        </div>
+%                   }
+                </fieldset>
             </div>
 %           $val = (exists $data->{'searchsql'}) ? $data->{'searchsql'}: '';
             <div class="el">
