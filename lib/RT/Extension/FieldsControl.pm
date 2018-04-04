@@ -112,7 +112,6 @@ Request Tracker (RT) is Copyright Best Practical Solutions, LLC.
 Hash describes ticket and transaction fields (besides CustomFields) which user
 can set on the update pages.
 <Displaying name> => <%ARGS key> 
-Some of these fields are set dynamically, e.g. Transaction.Type
 
 =cut
 
@@ -135,8 +134,7 @@ our $available_fields = {
     'Transaction.One-time-CC'       => 'UpdateCc',
     'Transaction.One-time-Bcc'      => 'UpdateBcc',
     'Transaction.Sign'              => 'Sign',
-    'Transaction.Encrypt'           => 'Encrypt',
-    'Transaction.Type'              => '__Dynamic__'
+    'Transaction.Encrypt'           => 'Encrypt'
 };
 
 
@@ -409,68 +407,12 @@ sub fill_txn_fields {
     foreach (grep /^Transaction./, keys %$fields) {
         $res->{$_} = $ARGSRef->{$fields->{$_}} if (defined $ARGSRef->{$fields->{$_}});
     }
-    $res->{'Transaction.Type'} = get_transaction_type($callback_name, $ARGSRef);
 
     $res = {
         %$res, 
         get_txn_customfields($fields, $ticket, $ARGSRef, $callback_name),
         get_txn_roles($fields, $ticket, $ARGSRef, $callback_name)  # FIXME: call only when user able to change roles
     };
-
-    return $res;
-}
-
-
-=head2 get_transaction_type($callback_name, \%ARGSRef) -> \@transaction_type
-
-Return Transaction.Type values array for given data
-
-Parameters:
-
-=over
-
-=item $callback_name
-
-=item $ARGSRef
-
-=back
-
-Returns:
-
-ARRAYREF - Transaction.Type values
-
-=cut
-
-sub get_transaction_type {
-    #TODO: add modifypeople
-    my $callback_name = shift;
-    my $ARGSRef = shift;
-
-    my $res = [];
-
-    if (ucfirst $callback_name eq 'Update') {
-        if (exists $ARGSRef->{'UpdateType'}
-            && $ARGSRef->{'UpdateType'} eq 'private')
-        {
-            $res = ['Comment', 'Update', 'Status'];
-        } else {
-            $res = ['Correspond', 'Update', 'Reply', 'Status'];
-        }
-    } elsif (ucfirst $callback_name eq 'Modify') {
-        $res = ['Set', 'Basics', 'Modify', 'CustomField', 'Status'];
-    } elsif (ucfirst $callback_name eq 'ModifyAll') {
-        $res = ['Jumbo', 'ModifyAll', 'Status', 'Set'];
-    } elsif (ucfirst $callback_name eq 'Bulk') {
-        if (exists $ARGSRef->{'UpdateType'}
-            && $ARGSRef->{'UpdateType'} eq 'private')
-        {
-            $res = ['Bulk', 'Comment', 'CustomField', 'Status', 'Set'];
-        } else {
-            $res = ['Bulk', 'Correspond', 'CustomField', 'Status', 'Set'];
-        }
-    } elsif (ucfirst $callback_name eq 'ModifyPeople') {
-        $res = ['ModifyPeople'];
-    }
 
     return $res;
 }

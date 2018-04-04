@@ -66,21 +66,6 @@ When user tries to update a ticket the following algorithm performs:
 
 NOTE: if field was set with multiple values on the page then each of value will be tested.
 
-# Special tests
-
-## Transaction.Type
-
-What page causes update. Can have following values:
-
-* "Comment", "Update", "Status" - Comment page;
-* "Correspond", "Update", "Reply", "Status" - Correspond page;
-* "Set", "Basics", "Modify", "CustomField", "Status" - Basics page;
-* "Jumbo", "ModifyAll", "Status", "Set" - Jumbo page.
-* "Bulk", "CustomField", "Status", "Set" - Bulk Update. Also includes value "Comment" or "Correspond" depended on appropriate operation.
-* "ModifyPeople" - ModifyPeople page.
-
-Several pages can have the same Transaction.Type. E.g. if you set *"Transaction.Type" equal "Update"* then this test will be passed both Comment and Correspond page. *"Transaction.Type" equal "Status"* matched to all pages because you can change ticket Status on them.
-
 
 # Author
 

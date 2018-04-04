@@ -169,9 +169,6 @@ msgstr "Транзакция.Цифровая подпись"
 msgid "Transaction.Encrypt"
 msgstr "Транзакция.Зашифровать"
 
-msgid "Transaction.Type"
-msgstr "Транзакция.Тип"
-
 #
 # Other
 #
