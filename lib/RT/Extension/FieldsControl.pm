@@ -706,7 +706,7 @@ sub get_txn_roles {
                 }
 
             # Create.html, ModifyPeople.html, Bulk.html, set single-user custom roles
-            # Create.html passes also 'Requestors' key
+            # Create.html passes also 'Requestors' key with comma-separated principals list
             } elsif ($k =~ /^${roledbname}s?$/) {
                 $ticket_principals = 0;  # Replace current ticket principals on new ones
                 @add_ids = ();
@@ -720,13 +720,27 @@ sub get_txn_roles {
                 } elsif ($roledbname eq 'Owner' && $name eq RT::Nobody->id) {
                     @add_principals = ();
                 } else {
-                    my @names = split /,/, $name;  # Create.html
-                    while (my $name = shift @names) {
-                        $name = $name =~ s/^\s+|\s+$//gr;  # / trim
-                        my $user = load_custom_role_user($name);
-                        next unless $user->id;
+                    # ModifyAll.html exclusion, it has two Owner selects
+                    # Owner comes as array. 
+                    # Otherwise ignore change
+                    if (ref $name eq 'ARRAY' && $callback_name eq 'ModifyAll') {
+                        my $owner = $ticket->OwnerObj;
+                        @add_ids = grep { $_ ne $owner->id }
+                            grep { defined && /^\d+$/ }
+                            @$name;
+                        splice @add_ids, 1;
+                        @add_ids = ($owner->id) unless @add_ids;
+                    # There is possible to set several comma-separated Requestors
+                    # on Create.html
+                    } else {
+                        my @names = split /,/, $name;  # Create.html
+                        while (my $name = shift @names) {
+                            $name = $name =~ s/^\s+|\s+$//gr;  # / trim
+                            my $user = load_custom_role_user($name);
+                            next unless $user->id;
 
-                        push @add_principals, $user->PrincipalObj;
+                            push @add_principals, $user->PrincipalObj;
+                        }
                     }
                 }
 
