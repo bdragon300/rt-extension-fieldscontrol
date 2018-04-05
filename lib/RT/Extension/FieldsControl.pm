@@ -234,6 +234,7 @@ our $custom_role_subfields = [qw(
 
 
 # All pages we spy on
+# On list update also inspect fill_txn_fields method
 our @spy_pages = qw/Create Update Modify ModifyAll ModifyPeople Bulk/;
 
 =head1 METHODS
@@ -410,9 +411,14 @@ sub fill_txn_fields {
 
     $res = {
         %$res, 
-        get_txn_customfields($fields, $ticket, $ARGSRef, $callback_name),
-        get_txn_roles($fields, $ticket, $ARGSRef, $callback_name)  # FIXME: call only when user able to change roles
+        get_txn_customfields($fields, $ticket, $ARGSRef, $callback_name)
     };
+
+    # Do not check roles when user can't change them. E.g. Modify.html
+    my @role_pages = qw/Create Update ModifyPeople ModifyAll Bulk/;
+    if ($callback_name ~~ @role_pages) {
+        $res = {%$res, get_txn_roles($fields, $ticket, $ARGSRef, $callback_name)};
+    }
 
     return $res;
 }
