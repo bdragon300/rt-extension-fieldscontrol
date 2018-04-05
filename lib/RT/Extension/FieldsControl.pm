@@ -1039,8 +1039,10 @@ sub check_ticket {
         # Substitute special tags in sfields values
         foreach (@{$rule->{'sfields'}}) {
             if ($_->{'value'} eq '__old__') {
-                if (exists($ticket_values->{$_->{'field'}})) {  # FIXME: what if !exists? Leave '__old__'?
+                if (exists($ticket_values->{$_->{'field'}})) {
                     $_->{'value'} = $ticket_values->{$_->{'field'}};
+                } else {
+                    $_->{'value'} = '';
                 }
                 $errors->{tests_refer_to_ticket} = 1;
             }
@@ -1062,8 +1064,10 @@ sub check_ticket {
         # Substitute special tags in rfields values
         foreach (@{$rule->{'rfields'}}) {
             if ($_->{'value'} eq '__old__') {
-                if (exists($ticket_values->{$_->{'field'}})) {  # FIXME: what if !exists? Leave '__old__'?
+                if (exists($ticket_values->{$_->{'field'}})) {
                     $_->{'value'} = $ticket_values->{$_->{'field'}};
+                } else {
+                    $_->{'value'} = '';
                 }
                 $errors->{tests_refer_to_ticket} = 1;
             }
