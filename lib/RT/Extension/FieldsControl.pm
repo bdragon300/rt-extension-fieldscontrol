@@ -271,7 +271,7 @@ sub get_fields_list {
     $crs->Limit(FIELD => 'disabled', OPERATOR => '=', VALUE => '0');
     my %crfields = ();
     while (my $cr = $crs->Next) {
-        # 'Role.Name.<subfield>' => 'Name.<subfield>'
+        # 'Role.Name.<subfield>' => 'RT::CustomRole-id.<subfield>'
         my %fields = 
             map {
                 join('.', ('Role', $cr->Name, $_)) => 'RT::CustomRole-' . $cr->id . '.' . $_
@@ -618,6 +618,29 @@ sub get_txn_roles {
 
     my %res;
 
+    my $queueobj;
+    if ($ticket) {
+        $queueobj = $ticket->QueueObj;
+    } elsif ($ARGSRef->{Queue}) {
+        $queueobj = RT::Queue->new( RT::SystemUser );
+        $queueobj->Load($ARGSRef->{Queue});
+    }
+    unless ($queueobj && $queueobj->id) {
+        RT::Logger->error(
+            "[$PACKAGE]: Fatal: unable to figure out ticket's queue. Skip check roles"
+        );
+        return %res;
+    }
+
+    # Collect CustomRoles' ids related to queue
+    my @queue_role_ids;
+    my $queue_roles = $queueobj->CustomRoles;
+    while (my $role = $queue_roles->Next) {
+        push @queue_role_ids, $role->id;
+    }
+    undef $queue_roles;
+    undef $queueobj;
+
     # CustomRoleName => RT::CustomRole-id
     my %roles = 
         map { /^Role\.(.*)\.\w+$/ => ($fields->{$_} =~ /^([^.]+)\./) } 
@@ -625,11 +648,14 @@ sub get_txn_roles {
         keys %$fields;
 
     foreach my $rolename (keys %roles) {
-        #TODO: skip role if its not applied to the current queue
         my $roledbname = $roles{$rolename};
 
+        # Skip role does not applied to queue
+        my ($crid) = $roledbname =~ /^RT::CustomRole-(.+)/;
+        next if ($crid && ! ($crid ~~ @queue_role_ids));
+
         my $rolegrp;
-        if ($ticket) {  # Skip if Create page caused check
+        if ($ticket) {  # Skip load role if Create page caused check
             $rolegrp = $ticket->RoleGroup($roledbname);
             next unless $rolegrp->id;
         }
