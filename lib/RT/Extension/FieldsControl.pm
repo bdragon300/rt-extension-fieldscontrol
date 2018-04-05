@@ -724,7 +724,6 @@ sub get_txn_roles {
                     }
                 }
 
-                # TODO: limit principals to 1 if role.is_single
                 last;
             }
         }
