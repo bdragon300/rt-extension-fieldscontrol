@@ -235,7 +235,7 @@ our $custom_role_subfields = [qw(
 
 # All pages we spy on
 # On list update also inspect fill_txn_fields method
-our @spy_pages = qw/Create Update Modify ModifyAll ModifyPeople Bulk/;
+our @spy_pages = qw/Create Update Modify ModifyAll ModifyPeople Bulk ModifyDates/;
 
 =head1 METHODS
 
