@@ -126,6 +126,10 @@ our $available_fields = {
     'Ticket.TimeWorked'             => 'TimeWorked',
     'Ticket.TimeLeft'               => 'TimeLeft',
     'Ticket.QueueId'                => 'Queue',
+    'Ticket.Last Contact'           => 'Told_Date',
+    'Ticket.Starts'                 => 'Starts_Date',
+    'Ticket.Started'                => 'Started_Date',
+    'Ticket.Due'                    => 'Due_Date',
     'Transaction.Attach'            => 'Attach',
     'Transaction.Content'           => 'Content',
     'Transaction.Worked'            => 'UpdateTimeWorked',
@@ -136,6 +140,12 @@ our $available_fields = {
     'Transaction.Sign'              => 'Sign',
     'Transaction.Encrypt'           => 'Encrypt'
 };
+
+
+my @datetime_fields = qw/Told_Date Starts_Date Started_Date Due_Date/;
+
+
+use constant DATETIME_NOT_SET => '1970-01-01 00:00:00';
 
 
 =head2 $empty_is_unchanged_fields
@@ -325,6 +335,11 @@ sub fill_ticket_fields {
     foreach my $f (grep /^Ticket./, keys %$fields) {
         my $fld = $fields->{$f};
         $res->{$f} = $ticket->_Value($fld);
+
+        # Unixtime 0 means 'Not set' for datetime fields
+        if ($f ~~ @datetime_fields && $res->{$f} eq DATETIME_NOT_SET) {
+            $res->{$f} = '';
+        }
     }
 
     my $cfs = $ticket->CustomFields;
@@ -399,6 +414,11 @@ sub fill_txn_fields {
             && $ticket)
         {
             $res->{$_} = $ticket->_Value($empty_is_unchanged_fields->{$_});
+        }
+
+        # Unixtime 0 means 'Not set' for datetime fields
+        if ($_ ~~ @datetime_fields && $res->{$_} eq DATETIME_NOT_SET) {
+            $res->{$_} = '';
         }
     }
 
