@@ -5,6 +5,25 @@
 %   operations => $filling->{'operations'}
 %  };
 %
+
+<&| /Widgets/TitleBox,title => loc('Help'), 'rolledup'=>0 &>
+<ol>
+    <li><&|/l&>If several values are assigned to Role or CustomField, each value will be tested</&></li>
+    <li><&|/l&>Test will be skipped if field is not applied to a ticket or a queue</&></li>
+    <li><&|/l&>Current role members add for test such as current CF values on the 'BulkUpdate' page</&></li>
+    <li><&|/l&>Boolean fields (with question sign in name, e.g. IsUser?) can be tested only against values: '1' is true, empty is false</&></li>
+    <li><&|/l&>All datetime values must be in GMT timezone in following format</&>: <i>2018-04-07 23:59:59</i></li>
+</ol>
+
+<&|/l&>Examples of tests</&>:
+<ul>
+    <li><&|/l&>Error if field is empty</&>: <b>Transaction.Worked -- not match regex -- '(?#MandatoryRegex).'</b></li>
+    <li><&|/l&>Error if Due value not in range September, 2018</&>: <b>Ticket.Due -- not equal regex -- '^2018-09'</b></li>
+    <li><&|/l&>Error if CF.dont_change has changed</&>: <b>CF.dont_change -- not equal -- '__old__'</b></li>
+    <li><&|/l&>Error if user group contains or added in Role.users_only</&>: <b>Role.users_only.IsUser? -- equal -- ''</b> <&|/l&>or</&> <b>Role.users_only.IsGroup? -- equal -- '1'</b></li>
+</ul>
+</&>
+
 <&| /Widgets/TitleBox,title => loc('Common'), class=>'reject-rule', 'rolledup'=>0 &>
     <div class="elgrp">
 %   $val = (exists $data->{'rulename'}) ? $data->{'rulename'} : '';

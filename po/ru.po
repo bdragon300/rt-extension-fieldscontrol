@@ -18,6 +18,42 @@ msgstr "Проверяемые поля"
 #edit.html
 #
 
+msgid "Help"
+msgstr "Помощь"
+
+msgid "If several values are assigned to Role or CustomField, each value will be tested"
+msgstr "Если роли или дополнительному полю присвоено несколько значений, то каждое из них будет проверено"
+
+msgid "Test will be skipped if field is not applied to a ticket or a queue"
+msgstr "Тест будет пропущен если поле не применимо к тикету или очереди"
+
+msgid "Current role members add for test such as current CF values on the 'BulkUpdate' page"
+msgstr "Текущие члены группы добавляются к проверке, также как и текущие значения дополнительных полей на странице 'Множественное изменение'"
+
+msgid "Boolean fields (with question sign in name, e.g. IsUser?) can be tested only against values: '1' is true, empty is false"
+msgstr "Логические поля (со знаком вопроса в имени, например, IsUser?) могут быть сравнены только со значениями: '1' -- истина, пустое значение -- ложь"
+
+msgid "All datetime values must be in GMT timezone in following format"
+msgstr "Все значения даты и времени должны быть в часовом поясе GMT в следующем формате"
+
+msgid "Examples of tests"
+msgstr "Примеры тестов"
+
+msgid "Error if field is empty"
+msgstr "Ошибка если поле пустое"
+
+msgid "Error if Due value not in range September, 2018"
+msgstr "Ошибка если значение поля Дан срок не находится в диапазоне Сентябрь 2018г."
+
+msgid "Error if CF.dont_change has changed"
+msgstr "Ошибка если CF.dont_change изменилось"
+
+msgid "Error if user group contains or added in Role.users_only"
+msgstr "Ошибка если группа пользователей содержится или добавляется в Role.users_only"
+
+msgid "or"
+msgstr "или"
+
 msgid "Remove restriction"
 msgstr "Удалить ограничение"
 
