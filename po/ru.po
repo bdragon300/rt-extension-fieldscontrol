@@ -36,9 +36,6 @@ msgstr "ОШИБКА: Невозможно удалить ограничение
 msgid "ERROR: Name field is required"
 msgstr "ОШИБКА: Поле Имя обязательно для заполнения"
 
-msgid "ERROR: TicketSQL selection field is required"
-msgstr "ОШИБКА: Поле выборки TicketSQL обязательно для заполнения"
-
 msgid "ERROR: Bad TicketSQL: %1"
 msgstr "ОШИБКА: Неправильный TicketSQL: %1"
 

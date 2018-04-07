@@ -1077,8 +1077,11 @@ sub check_ticket {
         next unless ($callback_name ~~ $rule->{apply_pages});  # Not applied on page caused request
 
         # Ticket match TicketSQL ("Old state")
-        my $res = ($ticket) ? find_ticket($ticket, $rule->{'searchsql'}) : 1;
-        next unless $res;
+        my $ticketsql_ok = 1;
+        if ($ticket && $rule->{'searchsql'}) {
+            $ticketsql_ok = find_ticket($ticket, $rule->{'searchsql'});
+        }
+        next unless $ticketsql_ok;
 
         my $sf_aggreg_type = $rule->{'sfieldsaggreg'};
         my $rf_aggreg_type = $rule->{'rfieldsaggreg'};

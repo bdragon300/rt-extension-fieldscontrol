@@ -120,15 +120,14 @@ if ($ARGS{'submit'}) {
     $rule->{apply_pages} = \@apply_pages;
 
     # Check whether TicketSQL is correct
-    my $val = $ARGS{searchsql};
-    unless ($val) {
-        push @results, loc("ERROR: TicketSQL selection field is required");
+    my $ssql = $ARGS{searchsql};
+    if ($ssql) {
+        my ($res, $msg) = $tickets->FromSQL($ssql);
+        unless ($res) {
+            push @results, loc("ERROR: Bad TicketSQL: [_1]", $msg);
+        }
     }
-    my ($res, $msg) = $tickets->FromSQL($val);
-    unless ($res) {
-        push @results, loc("ERROR: Bad TicketSQL: [_1]", $msg);
-    }
-    $rule->{searchsql} = $val;
+    $rule->{searchsql} = $ssql;
     
     # Retrieve fields
     my %field_types = (
