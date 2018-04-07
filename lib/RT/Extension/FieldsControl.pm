@@ -670,7 +670,7 @@ sub get_txn_roles {
 
     # CustomRoleName => RT::CustomRole-id
     my %roles = 
-        map { /^Role\.(.*)\.\w+$/ => ($fields->{$_} =~ /^([^.]+)\./) } 
+        map { /^Role\.(.*)\..+$/ => ($fields->{$_} =~ /^([^.]+)\./) } 
         grep { /^Role\./ }
         keys %$fields;
 
