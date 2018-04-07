@@ -239,7 +239,8 @@ The list must contain only valid users/groups db table fields
 
 our $custom_role_subfields = [qw(
     EmailAddress Name RealName Nickname Organization Address1 Address2
-    City State Zip Country WorkPhone HomePhone MobilePhone PagerPhone id
+    City State Zip Country WorkPhone HomePhone MobilePhone PagerPhone id IsUser?
+    IsGroup?
 )];
 
 
@@ -803,12 +804,18 @@ sub get_txn_roles {
             foreach my $member (@members) {
                 my $val = undef;
 
-                # RT::Group has only limited subfields
-                next if (ref($member) eq 'RT::Group' 
-                         && $subf ne 'Name' 
-                         && $subf ne 'id');
-
-                $val = $member->_Value($subf) // '';
+                if ($subf eq 'IsUser?') {
+                    $val = ref($member) eq 'RT::User';
+                } elsif ($subf eq 'IsGroup?') {
+                    $val = ref($member) eq 'RT::Group';
+                } else {
+                    # RT::Group has only Name, id subfields
+                    next if (ref($member) eq 'RT::Group' 
+                             && $subf ne 'Name' 
+                             && $subf ne 'id');
+                    $val = $member->_Value($subf) // '';
+                }
+                
                 push @{$vals{$k}}, $val;
             }
             push @{$vals{$k}}, '' unless @{$vals{$k}};
