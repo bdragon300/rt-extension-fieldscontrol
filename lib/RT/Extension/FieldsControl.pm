@@ -111,7 +111,7 @@ Request Tracker (RT) is Copyright Best Practical Solutions, LLC.
 
 Hash describes ticket and transaction fields (besides CustomFields) which user
 can set on the update pages.
-<Displaying name> => <%ARGS key> 
+<Displaying name> => <%ARGS keys>
 
 =cut
 
@@ -349,6 +349,7 @@ sub fill_ticket_fields {
     my $res = {};
     foreach my $f (grep /^Ticket./, keys %$fields) {
         my $fld = $fields->{$f};
+        $fld = $fld =~ s/^(.*)_Date/$1/gr;  # / Date fields names has '_Date' postfix in %ARGS
         $res->{$f} = $ticket->_Value($fld);
 
         # Unixtime 0 means 'Not set' for datetime fields
