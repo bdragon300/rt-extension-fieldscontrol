@@ -198,6 +198,20 @@ our $available_ops = {
             ? int( ! grep(/$_[1]/, @{$_[0]}))
             : int($_[0] !~ /$_[1]/);
         },
+    'more than' => 
+        sub {
+            my ($a, $b) = @_;
+            (ref($a) eq 'ARRAY')
+            ? int(grep { $_ gt $b } @$a)
+            : int($a gt $b);
+        },
+    'less than' =>
+        sub {
+            my ($a, $b) = @_;
+            (ref($a) eq 'ARRAY')
+            ? int(grep { $_ lt $b } @$a)
+            : int($a lt $b);
+        }
 };
 
 
