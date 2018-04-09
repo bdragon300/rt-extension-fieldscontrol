@@ -1110,6 +1110,10 @@ sub check_ticket {
                     $_->{'value'} = '';
                 }
                 $errors->{tests_refer_to_ticket} = 1;
+            } elsif ($_->{'value'} =~ /^__(.*)__$/) {  # Date expression
+                my $date = RT::Date->new( RT::SystemUser );
+                $date->Set( Format => 'unknown', Value => $1 );
+                $_->{'value'} = $date->ISO;
             }
         }
         my $matches = check_txn_fields($txn_values, $rule->{'sfields'});
@@ -1124,7 +1128,7 @@ sub check_ticket {
         )
         {
             next;
-        } 
+        }
 
         # Substitute special tags in rfields values
         foreach (@{$rule->{'rfields'}}) {
@@ -1135,6 +1139,10 @@ sub check_ticket {
                     $_->{'value'} = '';
                 }
                 $errors->{tests_refer_to_ticket} = 1;
+            } elsif ($_->{'value'} =~ /^__(.*)__$/) {  # Date expression
+                my $date = RT::Date->new( RT::SystemUser );
+                $date->Set( Format => 'unknown', Value => $1 );
+                $_->{'value'} = $date->ISO;
             }
         }
         my $rvalues = {%$ticket_values, %$txn_values};
