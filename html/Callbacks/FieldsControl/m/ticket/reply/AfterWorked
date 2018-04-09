@@ -1,0 +1,5 @@
+<%args>
+$Ticket
+</%args>
+
+<input type="hidden" name="FCLastUpdated-Ticket-cur" value="<% $ARGS{'FCLastUpdated-Ticket-cur'} || $Ticket->LastUpdated %>" />

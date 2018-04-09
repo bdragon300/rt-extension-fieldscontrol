@@ -1,0 +1,48 @@
+<%args>
+$TicketObj
+$ARGSRef
+$skip_update
+$checks_failure
+$results => []
+</%args>
+
+<%init>
+# Check whether ticket changed by someone since last page load
+if ($ARGSRef->{FCAbort}) {
+	$$skip_update = 1;
+	push @$results, 
+		loc('ERROR: The ticket was changed by someone at the same time as you. Please make your changes again.');
+
+} elsif ($ARGSRef->{SubmitTicket}) {
+	my $lastupdated = $ARGSRef->{'FCLastUpdated-Ticket-cur'} || '0';
+	my $check = RT::Extension::FieldsControl::check_ticket($TicketObj, $ARGSRef, 'm/ticket/reply');
+
+	if ($TicketObj->LastUpdated gt $lastupdated
+		&& $check->{tests_refer_to_ticket})
+	{
+		my $action = $ARGSRef->{Action} || 'Comment';  # 'Comment' or 'Respond'
+		my @u = (
+			RT->Config->Get('WebURL') =~ s/\/+$//r, # remove trailing slash /
+			'/m/ticket/reply?Action=',
+			$action,
+			'&id=',
+			$TicketObj->id,
+			'&FCAbort=1'
+		);
+		$m->redirect(join('', @u));
+		
+	} elsif (my @e = @{$check->{errors}}) {
+		$$skip_update = 1;
+		push @$results, loc('ERROR: request aborted because of following restrictions:');
+		while (my $r = shift @e) {
+			push @$results, 
+				".. " . $r->{rulename},
+				loc("...... Failed fields: ~[ [_1] ~]", join(', ', map { loc($_) } @{shift @e}));
+
+			if ($r->{comment}) {
+				push @$results, loc("...... Comment: [_1]", $r->{comment});
+			}
+		}
+	}
+}
+</%init>
