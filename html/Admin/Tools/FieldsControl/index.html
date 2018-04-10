@@ -3,7 +3,7 @@
 
 <& /Elements/ListActions, actions => \@results &>
 
-<& Elements/CollectionTable, headers => $table_headers, rows => $table_rows &>
+<& Elements/CollectionTable, headers => \@headers, rows => \@rows &>
 
 <%init>
 my $title = loc('FieldsControl configuration');
@@ -18,18 +18,33 @@ my $restrictions = $config{restrictions};
 my @results;
 
 # Fill data for CollectionTable
-my $table_rows = [];
-my $table_headers = [loc('#'), loc('Name'), loc('"Fails if" section fields'), loc('Status')];
+my @rows = ();
+my @headers = (loc('#'), loc('Name'), loc('"Fails if" section fields'), 
+    loc('Status'));
 
 foreach my $id (sort keys %$restrictions) {
-    push @$table_rows, {
-        'link' => '/Admin/Tools/FieldsControl/edit.html?id=' . $id,
-        'cols' => [
-            $id,
-            $restrictions->{$id}->{'rulename'},
-            (join ', ', map {loc($_->{'field'})} @{$restrictions->{$id}->{'rfields'}}),
-            ($restrictions->{$id}->{'enabled'} ? loc('Enabled') : loc('Disabled')) #loc
-        ],
+    my $v = $restrictions->{$id};
+
+    # Columns with hyperlink
+    my @cols = (
+        map {
+                {  # HASHREF
+                    'pre' => '<a href="/Admin/Tools/FieldsControl/edit.html?id=' . $id . '">', 
+                    'v' => $_,
+                    'post' => '</a>'
+                }
+            }  
+        ($id, $v->{'rulename'})
+    );
+    # Plain text columns
+    push @cols, {
+        'v' => $v->{'comment'} // '',
+        'td_style' => 'width: 30%'
+    };
+    push @cols, ($v->{'enabled'} ? 'Enabled' : 'Disabled');
+
+    push @rows, {
+        'cols' => [@cols],
     };
 }
 </%init>

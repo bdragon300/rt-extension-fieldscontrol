@@ -15,11 +15,16 @@
             <td class="collection-as-table"><input type="checkbox" name="item-" . $i></td>
 %       }
 %       foreach my $col (@{$row->{'cols'}}) {
-%           if ($row->{'link'}) {
-                <td class="collection-as-table"><a href="<% $row->{'link'} %>"><% $col %></a></td>
-%           } else {
-                <td class="collection-as-table"><% $col %></td>
+%           if ( ! ref($col)) {
+			<td class="collection-as-table">
+				<% $col %>
+%           } elsif (ref($col) eq 'HASH') {
+			<td class="collection-as-table" style="<% $col->{'td_style'} %>">
+				<% $col->{'pre'} | n %>
+				<% $col->{'v'} %>
+				<% $col->{'post'} | n %>
 %           }
+			</td>
 %       }
         </tr>
 %	$i++;
