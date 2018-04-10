@@ -35,6 +35,36 @@
 
 <form action="/Admin/Tools/FieldsControl/edit.html?id=<% $id %>&Create=<% $Create %>" method="post">
     <& Elements/FCRule, filling => $filling, data => $rule, aggreg_types => \%aggreg_types &>
+    
+<&| /Widgets/TitleBox,title => loc('Help'), 'rolledup'=>0 &>
+<ol>
+    <li><&|/l&>If several values are assigned to Role or CustomField, each value will be tested</&></li>
+    <li><&|/l&>Test will be skipped if field is not applied to a ticket or a queue</&></li>
+    <li><&|/l&>Current role members add for test such as current CF values on the 'BulkUpdate' page</&></li>
+    <li><&|/l&>Boolean fields (with question sign in name, e.g. IsUser?) can be tested only against values: '1' is true, empty is false</&></li>
+    <li><&|/l&>All datetime values must be in GMT timezone</&></li>
+    <li><&|/l&>You can compare datetime fields with date expressions wrapped up with double underscores, e.g.</&><i>__1 day ago__</i>. <&|/l&>See Time::ParseDate package documentation</&></li>
+    <li><&|/l&>"less than" and "more than" operations do stringwise comparison according to the ASCII value order. With numbers they are work as expected. Here another examples</&>:
+        <ul>
+            <li>'123' &lt; '124' &mdash; <b><&|/l&>true</&></b></li>
+            <li>'012' &lt; '12' &mdash; <b><&|/l&>true</&></b>, <&|/l&>because '0' is less than '1' in the ASCII</&></li>
+            <li>'some' &lt; 'some value' &mdash; <b><&|/l&>true</&></b>, <&|/l&>because the second string has bigger length and letters are sequentally equal</&></li>
+            <li>'New-York' &lt; 'Washington' &mdash; <b><&|/l&>true</&></b>, <&|/l&>because 'N' is less than 'W' in the ASCII</&></li>
+            <li>'aardvark' &lt; 'aaron' &mdash; <b><&|/l&>true</&></b>, <&|/l&>because the forth 'd' is less than 'o' in the ASCII</&></li>
+            <li>'New-york' &lt; 'New-York' &mdash; <b><&|/l&>false</&></b>, <&|/l&>because capital 'Y' is less than lower 'y' in the ASCII</&></li>
+        </ul>
+    </li>
+</ol>
+
+<&|/l&>Examples of tests</&>:
+<ul>
+    <li><&|/l&>Error if field is empty</&>: <b>Transaction.Worked -- not match regex -- '(?#MandatoryRegex).'</b></li>
+    <li><&|/l&>Error if Due value not in range September, 2018</&>: <b>Ticket.Due -- not equal regex -- '^2018-09'</b></li>
+    <li><&|/l&>Error if CF.dont_change has changed</&>: <b>CF.dont_change -- not equal -- '__old__'</b></li>
+    <li><&|/l&>Error if user group contains or added in Role.users_only</&>: <b>Role.users_only.IsUser? -- equal -- ''</b> <&|/l&>or</&> <b>Role.users_only.IsGroup? -- equal -- '1'</b></li>
+    <li><&|/l&>Error if Created is older than two days ago</&>: <b>Ticket.Created -- less than -- '__2 days ago__'</b></li>
+</ul>
+</&>
 
 %   if ($Create == 0) {
     <& /Elements/Submit, 
