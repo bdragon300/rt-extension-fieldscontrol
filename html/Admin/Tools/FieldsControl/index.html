@@ -21,7 +21,7 @@ my @results;
 my $table_rows = [];
 my $table_headers = [loc('#'), loc('Name'), loc('Checking fields'), loc('Status')];
 
-foreach my $id (keys %$restrictions) {
+foreach my $id (sort keys %$restrictions) {
     push @$table_rows, {
         'link' => '/Admin/Tools/FieldsControl/edit.html?id=' . $id,
         'cols' => [
