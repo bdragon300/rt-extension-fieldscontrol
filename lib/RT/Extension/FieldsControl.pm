@@ -259,7 +259,7 @@ our $custom_role_subfields = [qw(
 
 
 # All pages we spy on
-# On list update also inspect fill_txn_fields method
+# On list update also inspect check_ticket method
 our @spy_pages = qw(Create Update Modify ModifyAll ModifyPeople Bulk 
     ModifyDates m/ticket/reply m/ticket/create);
 
@@ -422,7 +422,9 @@ sub fill_txn_fields {
 
     my $res = {};
     foreach (grep /^Ticket./, keys %$fields) {
-        $res->{$_} = $ARGSRef->{$fields->{$_}} if (defined $ARGSRef->{$fields->{$_}});
+        next unless (defined $ARGSRef->{$fields->{$_}});
+
+        $res->{$_} = $ARGSRef->{$fields->{$_}};
 
         # If empty then retrieve it from TicketObj
         if (exists($empty_is_unchanged_fields->{$_})
@@ -443,20 +445,15 @@ sub fill_txn_fields {
     #
 
     foreach (grep /^Transaction./, keys %$fields) {
-        $res->{$_} = $ARGSRef->{$fields->{$_}} if (defined $ARGSRef->{$fields->{$_}});
+        next unless (defined $ARGSRef->{$fields->{$_}});
+
+        $res->{$_} = $ARGSRef->{$fields->{$_}};
     }
 
     $res = {
         %$res, 
         get_txn_customfields($fields, $ticket, $ARGSRef, $callback_name)
     };
-
-    # Do not check roles when user can't change them. E.g. Modify.html
-    my @role_pages = qw(Create Update ModifyPeople ModifyAll Bulk 
-        m/ticket/reply m/ticket/create);
-    if ($callback_name ~~ @role_pages) {
-        $res = {%$res, get_txn_roles($fields, $ticket, $ARGSRef, $callback_name)};
-    }
 
     return $res;
 }
@@ -626,7 +623,7 @@ sub normalize_object_custom_field_values {
 }
 
 
-=head2 get_txn_roles(\%fields, $ticket, \%ARGSRef, $callback_name) -> %customroles
+=head2 fill_txn_roles(\%fields, $ticket, \%ARGSRef, $callback_name) -> %customroles
 
 Return Role.* fields came with request in ARGSRef
 
@@ -654,7 +651,7 @@ Returns:
 
 =cut
 
-sub get_txn_roles {
+sub fill_txn_roles {
     my $fields = shift;
     my $ticket = shift;
     my $ARGSRef = shift;
@@ -1123,6 +1120,14 @@ sub check_ticket {
     my $txn_values = fill_txn_fields(\%fields, $ticket, $ARGSRef, $callback_name);
     my $ticket_values = ($ticket) ? fill_ticket_fields(\%fields, $ticket) : {};
 
+    # Use roles only when user can change them on, E.g. Modify.html
+    my %roles_values = ();
+    my @role_pages = qw(Create Update ModifyPeople ModifyAll Bulk 
+        m/ticket/reply m/ticket/create);
+    if ($callback_name ~~ @role_pages) {
+        %roles_values = fill_txn_roles(\%fields, $ticket, $ARGSRef, $callback_name);
+    }
+
     foreach my $rule (values %restrictions) {
         next unless ($rule->{'enabled'});
         next unless ($callback_name ~~ $rule->{apply_pages});  # Not applied on page caused request
@@ -1181,7 +1186,7 @@ sub check_ticket {
                 $_->{'value'} = $date->ISO;
             }
         }
-        my $rvalues = {%$ticket_values, %$txn_values};
+        my $rvalues = {%$ticket_values, %$txn_values, %roles_values};
         $matches = check_txn_fields($rvalues, $rule->{'rfields'});
         die "INTERNAL ERROR: [$PACKAGE] incorrect config in database. Reconfigure please." 
             unless exists($aggreg_types->{$rf_aggreg_type});
