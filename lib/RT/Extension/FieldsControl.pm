@@ -1118,15 +1118,24 @@ sub check_ticket {
         values %restrictions;
 
     my $txn_values = fill_txn_fields(\%fields, $ticket, $ARGSRef, $callback_name);
-    my $ticket_values = ($ticket) ? fill_ticket_fields(\%fields, $ticket) : {};
 
-    # Use roles only when user can change them on, E.g. Modify.html
+    # Now we have actual fields list (Ticket.*, Transaction.*, CF.*) that came with request
+    # Remove another ones since user can't modify 'em, so no need to check 'em
+    my $ticket_values = {};
+    if ($ticket) {
+        my %ticket_fields = @fields{keys %$txn_values};
+        $ticket_values = fill_ticket_fields(\%ticket_fields, $ticket);
+    }
+
+    # Check roles only when user can change them on, E.g. Modify.html
     my %roles_values = ();
     my @role_pages = qw(Create Update ModifyPeople ModifyAll Bulk 
         m/ticket/reply m/ticket/create);
     if ($callback_name ~~ @role_pages) {
         %roles_values = fill_txn_roles(\%fields, $ticket, $ARGSRef, $callback_name);
     }
+
+    my %all_values = (%$ticket_values, %roles_values, %$txn_values);
 
     foreach my $rule (values %restrictions) {
         next unless ($rule->{'enabled'});
@@ -1157,7 +1166,7 @@ sub check_ticket {
                 $_->{'value'} = $date->ISO;
             }
         }
-        my $matches = check_txn_fields($txn_values, $rule->{'sfields'});
+        my $matches = check_txn_fields(\%all_values, $rule->{'sfields'});
         die "INTERNAL ERROR: [$PACKAGE] incorrect config in database. Reconfigure please." 
             unless exists($aggreg_types->{$sf_aggreg_type});
         my $aggreg_res = $aggreg_types->{$sf_aggreg_type}->($matches);
@@ -1186,8 +1195,7 @@ sub check_ticket {
                 $_->{'value'} = $date->ISO;
             }
         }
-        my $rvalues = {%$ticket_values, %$txn_values, %roles_values};
-        $matches = check_txn_fields($rvalues, $rule->{'rfields'});
+        $matches = check_txn_fields(\%all_values, $rule->{'rfields'});
         die "INTERNAL ERROR: [$PACKAGE] incorrect config in database. Reconfigure please." 
             unless exists($aggreg_types->{$rf_aggreg_type});
         $aggreg_res = $aggreg_types->{$rf_aggreg_type}->($matches);
