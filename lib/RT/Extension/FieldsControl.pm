@@ -138,7 +138,9 @@ our $available_fields = {
     'Transaction.One-time-CC'       => 'UpdateCc',
     'Transaction.One-time-Bcc'      => 'UpdateBcc',
     'Transaction.Sign'              => 'Sign',
-    'Transaction.Encrypt'           => 'Encrypt'
+    'Transaction.Encrypt'           => 'Encrypt',
+    'Transaction.Comment?'          => '__Dynamic__',
+    'Transaction.Correspond?'       => '__Dynamic__'
 };
 
 
@@ -448,6 +450,15 @@ sub fill_txn_fields {
         next unless (defined $ARGSRef->{$fields->{$_}});
 
         $res->{$_} = $ARGSRef->{$fields->{$_}};
+    }
+
+    # Comment?, Correspond?
+    $res->{'Transaction.Comment?'} = '';
+    $res->{'Transaction.Correspond?'} = '';
+    if (ucfirst $callback_name eq 'Update'
+        && exists($ARGSRef->{'UpdateType'})) {
+        $res->{'Transaction.Comment?'} = $ARGSRef->{'UpdateType'} eq 'private';
+        $res->{'Transaction.Correspond?'} = $ARGSRef->{'UpdateType'} eq 'response';
     }
 
     $res = {
