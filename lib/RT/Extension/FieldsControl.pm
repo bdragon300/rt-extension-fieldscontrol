@@ -813,37 +813,71 @@ sub get_txn_roles {
         }
 
         # Fill out subfields
-        my %vals = ();
-        foreach my $subf (@$custom_role_subfields) {
-            my $k = "Role.${rolename}.${subf}";
-            $vals{$k} = [];
-
-            foreach my $member (@members) {
-                my $val = undef;
-
-                if ($subf eq 'IsUser?') {
-                    $val = ref($member) eq 'RT::User';
-                } elsif ($subf eq 'IsGroup?') {
-                    $val = ref($member) eq 'RT::Group';
-                } else {
-                    # RT::Group has only Name, id subfields
-                    next if (ref($member) eq 'RT::Group' 
-                             && $subf ne 'Name' 
-                             && $subf ne 'id');
-                    $val = $member->_Value($subf) // '';
-                }
-                
-                push @{$vals{$k}}, $val;
-            }
-            push @{$vals{$k}}, '' unless @{$vals{$k}};
-        }
-        @res{keys %vals} = values %vals;
+        my $subfields_data = fill_role_subfields($rolename, \@members, $custom_role_subfields);
+        @res{keys %$subfields_data} = values %$subfields_data;
 
         undef @members;
         undef @add_principals;
     }
 
     return %res;
+}
+
+
+=head2 fill_role_subfields($rolename, \@members, \@subfields_list) -> \%subfields_data
+
+Takes role and its members and makes hash suitable for compare. Such as:
+Role.role1.id => [<ids>], Role.role1.name => [<names>] and so on
+
+Parameters:
+
+=over
+
+=item $rolename - Printable role name. Substitutes to result keys
+
+=item \@members - ARRAYREF with role members, RT::User or RT::Group objects
+
+=item \@subfields_list - ARRAYREF with subfields list
+
+=back
+
+Return:
+
+HASHREF with filled data
+
+=cut
+
+sub fill_role_subfields {
+    my $rolename = shift;
+    my $members = shift;
+    my $subfields = shift;
+
+    my %res = ();
+    foreach my $subf (@$subfields) {
+        my $k = "Role.${rolename}.${subf}";
+        $res{$k} = [];
+
+        foreach my $member (@$members) {
+            my $val = undef;
+
+            if ($subf eq 'IsUser?') {
+                $val = ref($member) eq 'RT::User';
+            } elsif ($subf eq 'IsGroup?') {
+                $val = ref($member) eq 'RT::Group';
+            } else {
+                # RT::Group has only Name, id subfields
+                next if (ref($member) eq 'RT::Group' 
+                         && $subf ne 'Name' 
+                         && $subf ne 'id');
+                $val = $member->_Value($subf) // '';
+            }
+            
+            push @{$res{$k}}, $val;
+        }
+        push @{$res{$k}}, '' unless @{$res{$k}};
+    }
+
+    return \%res;
 }
 
 
