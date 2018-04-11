@@ -452,14 +452,14 @@ sub fill_txn_fields {
 
     $res = {
         %$res, 
-        get_txn_customfields($fields, $ticket, $ARGSRef, $callback_name)
+        fill_txn_customfields($fields, $ticket, $ARGSRef, $callback_name)
     };
 
     return $res;
 }
 
 
-=head2 get_txn_customfields(\%fields, $ticket, \%ARGSRef, $callback_name) -> %customfields
+=head2 fill_txn_customfields(\%fields, $ticket, \%ARGSRef, $callback_name) -> %customfields
 
 Return CF.* fields came with request in ARGSRef
 
@@ -487,7 +487,7 @@ Returns:
 
 =cut
 
-sub get_txn_customfields {
+sub fill_txn_customfields {
     my $fields = shift;
     my $ticket = shift;
     my $ARGSRef = shift;
