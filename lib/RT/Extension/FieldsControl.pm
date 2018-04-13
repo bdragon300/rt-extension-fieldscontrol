@@ -1139,6 +1139,8 @@ sub check_ticket {
         %roles_values = fill_txn_roles(\%fields, $ticket, $ARGSRef, $callback_name);
     }
 
+    my %all_values = (%$ticket_values, %roles_values, %$txn_values);
+
     foreach my $rule (values %restrictions) {
         next unless ($rule->{'enabled'});
         next unless ($callback_name ~~ $rule->{apply_pages});  # Not applied on page caused request
@@ -1168,7 +1170,7 @@ sub check_ticket {
                 $_->{'value'} = $date->ISO;
             }
         }
-        my $matches = check_txn_fields($txn_values, $rule->{'sfields'});
+        my $matches = check_txn_fields(\%all_values, $rule->{'sfields'});
         die "INTERNAL ERROR: [$PACKAGE] incorrect config in database. Reconfigure please." 
             unless exists($aggreg_types->{$sf_aggreg_type});
         my $aggreg_res = $aggreg_types->{$sf_aggreg_type}->($matches);
@@ -1197,8 +1199,7 @@ sub check_ticket {
                 $_->{'value'} = $date->ISO;
             }
         }
-        my $rvalues = {%$ticket_values, %$txn_values, %roles_values};
-        $matches = check_txn_fields($rvalues, $rule->{'rfields'});
+        $matches = check_txn_fields(\%all_values, $rule->{'rfields'});
         die "INTERNAL ERROR: [$PACKAGE] incorrect config in database. Reconfigure please." 
             unless exists($aggreg_types->{$rf_aggreg_type});
         $aggreg_res = $aggreg_types->{$rf_aggreg_type}->($matches);
