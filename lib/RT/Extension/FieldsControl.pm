@@ -169,8 +169,12 @@ our $empty_is_unchanged_fields = {
 
 Operations available while testing ticket/transaction fields
 <Displaying name> => <callback>
-Callback receives two params: data (can be SCALAR or ARRAY) and test value
-If ARRAY given in data then each element will be tested against test value
+Callbacks takes two params:
+
+1. actual_value -- ARRAYREF|SCALAR, actual txn/ticket field value
+
+2. conf_value -- ARRAYREF|SCALAR, restriction value that actual values 
+compares with. Can be ARRAYRef when e.g. when '__old__' tag specified
 
 =cut
 
@@ -178,27 +182,29 @@ If ARRAY given in data then each element will be tested against test value
 our $available_ops = {
     'equal' =>
         sub {
-            (ref($_[0]) eq 'ARRAY')
-            ? int(grep(/^$_[1]$/, @{$_[0]}))
-            : int($_[0] eq $_[1]);
+            my ($a, $b) = @_;
+            if (ref($_[0]) eq 'ARRAY' && ref($_[1]) eq 'ARRAY') {
+                $a = [sort(@$a)]; $b = [sort(@$b)];
+            }
+            $b ~~ $a;
         },
     'not equal' =>
         sub {
-            (ref($_[0]) eq 'ARRAY')
-            ? int( ! grep(/^$_[1]$/, @{$_[0]}))
-            : int($_[0] ne $_[1]);
+            my ($a, $b) = @_;
+            if (ref($_[0]) eq 'ARRAY' && ref($_[1]) eq 'ARRAY') {
+                $a = [sort(@$a)]; $b = [sort(@$b)];
+            }
+            ! ($b ~~ $a);
         },
     'match regex' =>
         sub {
-            (ref($_[0]) eq 'ARRAY')
-            ? int(grep(/$_[1]/, @{$_[0]}))
-            : int($_[0] =~ /$_[1]/);
+            return '' if (ref($_[1]) eq 'ARRAY');  # Must be regex only
+            return qr/$_[1]/ ~~ $_[0];
         },
     'not match regex' =>
         sub {
-            (ref($_[0]) eq 'ARRAY')
-            ? int( ! grep(/$_[1]/, @{$_[0]}))
-            : int($_[0] !~ /$_[1]/);
+            return '' if (ref($_[1]) eq 'ARRAY');  # Must be regex only
+            return ! (qr/$_[1]/ ~~ $_[0]);
         },
     'more than' => 
         sub {
