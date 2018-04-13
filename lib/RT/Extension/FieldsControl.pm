@@ -366,24 +366,6 @@ sub fill_ticket_fields {
         }
     }
 
-    my $cfs = $ticket->CustomFields;
-    while (my $cf = $cfs->Next) {
-        my $cf_name = 'CF.' . $cf->Name;
-        next unless exists $fields->{$cf_name};
-
-        my $vals = $cf->ValuesForObject($ticket);
-        if ($vals->Count == 0) {
-            $res->{$cf_name} = '';
-        } elsif ($vals->Count == 1) {
-            $res->{$cf_name} = $vals->First->Content;
-        } else {
-            my @val = ();
-            while (my $v = $vals->Next) {
-                push @val, $v->Content;
-            }
-            $res->{$cf_name} = [@val];
-        }
-    }
     return $res;
 }
 
@@ -511,9 +493,15 @@ sub fill_txn_customfields {
 
     my %res;
 
-    foreach my $cf_abbr (grep /^CF./, keys %$fields) {
-        my $cf_id = $fields->{$cf_abbr};
-        my @arg_val = ();
+    my $cfs = $ticket->CustomFields;
+    while (my $cf = $cfs->Next) {
+        my $print_name = 'CF.' . $cf->Name;
+        next unless (exists $fields->{$print_name});
+
+        my $vals_collection = $cf->ValuesForObject($ticket);
+
+        my $cf_id = $cf->id;
+        my @txn_vals = ();
 
         # Bulk page sends Add/Delete values (i.e. diff) when other pages send
         # only new values
@@ -527,33 +515,28 @@ sub fill_txn_customfields {
                 grep /^Bulk-Delete-CustomField-${cf_id}-Value[^-]?$/, 
                 keys %$ARGSRef;
 
-            my $cf = RT::CustomField->new( RT->SystemUser );
-            $cf->Load($cf_id);
-            next unless $cf->id;
-            my $vals_collection = $cf->ValuesForObject($ticket);
-
             # Apply CF "diff". Leave @arg_val empty if delete all values
             unless ($ARGSRef->{"Bulk-Delete-CustomField-${cf_id}-AllValues"}) {
-                @arg_val = map { $_->Content } @{$vals_collection->ItemsArrayRef};
+                @txn_vals = map { $_->Content } @{$vals_collection->ItemsArrayRef};
                 
                 # RT firstly tries to delete values, then add new ones. Do the same
                 my @to_delete_n = normalize_object_custom_field_values(
                     CustomField => $cf, 
                     Value => $to_delete[0]
                 );
-                @arg_val = grep ! ( $_ ~~ @to_delete_n ), @arg_val;
+                @txn_vals = grep ! ( $_ ~~ @to_delete_n ), @txn_vals;
                 
                 my @to_add_n = normalize_object_custom_field_values(
                     CustomField => $cf, 
                     Value => $to_add[0]
                 );
-                push @arg_val, @to_add_n;
+                push @txn_vals, @to_add_n;
 
                 my $maxv = $cf->MaxValues;
                 if ($maxv == 1) {
-                    @arg_val = ($arg_val[-1])
+                    @txn_vals = ($txn_vals[-1])
                 } elsif ($maxv > 1) {
-                    @arg_val = grep { defined } @arg_val[-$maxv..-1];
+                    @txn_vals = grep { defined } @txn_vals[-$maxv..-1];
                 }
             }
 
@@ -562,22 +545,29 @@ sub fill_txn_customfields {
                 map $ARGSRef->{$_},
                 grep /^Object-[:\w]+-[0-9]*-CustomField-${cf_id}-Value[^-]?$/, 
                 keys %$ARGSRef;
-            next unless (@raw);  # No such CF
-
-            my $cf = RT::CustomField->new( RT->SystemUser );
-            $cf->Load($cf_id);
-            next unless $cf->id;
-
-            @arg_val = normalize_object_custom_field_values(
-                CustomField => $cf, 
-                Value => $raw[0]
-            );
+            if (@raw) {
+                @txn_vals = normalize_object_custom_field_values(
+                    CustomField => $cf, 
+                    Value => $raw[0]
+                );
+            }
         }
 
-        # Its needed to have at least one element to get op callback worked
-        push @arg_val, '' unless (@arg_val);
+        my $res_vals;
+        if (@txn_vals) {
+            $res_vals = \@txn_vals;
+        } else {
+            my @v = ();
+            while (my $v = $vals_collection->Next) {
+                push @v, $v->Content;
+            }
+            $res_vals = \@v;
 
-        $res{$cf_abbr} = \@arg_val;
+            # Its needed to have at least one element to get op callback worked
+            push @$res_vals, '' unless (@v);
+        }
+
+        $res{$print_name} = $res_vals;
     }
 
     return %res;
@@ -1160,6 +1150,18 @@ sub check_ticket {
             if ($_->{'value'} eq '__old__') {
                 if (exists($ticket_values->{$_->{'field'}})) {
                     $_->{'value'} = $ticket_values->{$_->{'field'}};
+                } elsif ($_->{'field'} =~ /^CF\.(.*)$/) {
+                    $_->{'value'} = '';
+                    next unless ($ticket);
+
+                    my $cfid = $fields{$_->{'field'}};
+                    my $cfvals = $ticket->CustomFieldValues($cfid);
+                    my @cfvals = map { $_->Content } @{$cfvals->ItemsArrayRef};
+                    undef $cfvals;
+
+                    $_->{'value'} = (scalar(@cfvals) == 1)
+                        ? $cfvals[0]
+                        : \@cfvals;
                 } elsif ($_->{'field'} =~ /^Role\.([^.]+)\..*$/) {
                     $_->{'value'} = '';
                     next unless ($ticket);
@@ -1175,6 +1177,8 @@ sub check_ticket {
                     my $sf = fill_role_subfields(
                         $rolename, \@members, $custom_role_subfields
                     );
+                    undef $rolegrp;
+
                     $_->{'value'} = $sf->{$_->{'field'}};
                 } else {
                     $_->{'value'} = '';
@@ -1205,6 +1209,18 @@ sub check_ticket {
             if ($_->{'value'} eq '__old__') {
                 if (exists($ticket_values->{$_->{'field'}})) {
                     $_->{'value'} = $ticket_values->{$_->{'field'}};
+                } elsif ($_->{'field'} =~ /^CF\.(.*)$/) {
+                    $_->{'value'} = '';
+                    next unless ($ticket);
+
+                    my $cfid = $fields{$_->{'field'}};
+                    my $cfvals = $ticket->CustomFieldValues($cfid);
+                    my @cfvals = map { $_->Content } @{$cfvals->ItemsArrayRef};
+                    undef $cfvals;
+
+                    $_->{'value'} = (scalar(@cfvals) == 1)
+                        ? $cfvals[0]
+                        : \@cfvals;
                 } elsif ($_->{'field'} =~ /^Role\.([^.]+)\..*$/) {
                     $_->{'value'} = '';
                     next unless ($ticket);
