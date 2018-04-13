@@ -1160,6 +1160,22 @@ sub check_ticket {
             if ($_->{'value'} eq '__old__') {
                 if (exists($ticket_values->{$_->{'field'}})) {
                     $_->{'value'} = $ticket_values->{$_->{'field'}};
+                } elsif ($_->{'field'} =~ /^Role\.([^.]+)\..*$/) {
+                    $_->{'value'} = '';
+                    next unless ($ticket);
+
+                    my $rolename = $1;
+                    my ($sysname) = $fields{$_->{'field'}} =~ /^([^.]+)\./;
+                    my $rolegrp = $ticket->RoleGroup($sysname);
+                    next unless ($rolegrp->id);
+
+                    my @members = 
+                        map { $_->MemberObj->Object }
+                        @{$rolegrp->MembersObj->ItemsArrayRef};
+                    my $sf = fill_role_subfields(
+                        $rolename, \@members, $custom_role_subfields
+                    );
+                    $_->{'value'} = $sf->{$_->{'field'}};
                 } else {
                     $_->{'value'} = '';
                 }
@@ -1189,6 +1205,22 @@ sub check_ticket {
             if ($_->{'value'} eq '__old__') {
                 if (exists($ticket_values->{$_->{'field'}})) {
                     $_->{'value'} = $ticket_values->{$_->{'field'}};
+                } elsif ($_->{'field'} =~ /^Role\.([^.]+)\..*$/) {
+                    $_->{'value'} = '';
+                    next unless ($ticket);
+
+                    my $rolename = $1;
+                    my ($sysname) = $fields{$_->{'field'}} =~ /^([^.]+)\./;
+                    my $rolegrp = $ticket->RoleGroup($sysname);
+                    next unless ($rolegrp->id);
+
+                    my @members = 
+                        map { $_->MemberObj->Object }
+                        @{$rolegrp->MembersObj->ItemsArrayRef};
+                    my $sf = fill_role_subfields(
+                        $rolename, \@members, $custom_role_subfields
+                    );
+                    $_->{'value'} = $sf->{$_->{'field'}};
                 } else {
                     $_->{'value'} = '';
                 }
