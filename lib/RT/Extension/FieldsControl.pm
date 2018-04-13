@@ -261,7 +261,6 @@ our $custom_role_subfields = [qw(
 
 
 # All pages we spy on
-# On list update also inspect check_ticket method
 our @spy_pages = qw(Create Update Modify ModifyAll ModifyPeople Bulk 
     ModifyDates m/ticket/reply m/ticket/create);
 
@@ -1132,12 +1131,7 @@ sub check_ticket {
     my $ticket_values = ($ticket) ? fill_ticket_fields(\%fields, $ticket) : {};
 
     # Use roles only when user can change them on, E.g. Modify.html
-    my %roles_values = ();
-    my @role_pages = qw(Create Update ModifyPeople ModifyAll Bulk 
-        m/ticket/reply m/ticket/create);
-    if ($callback_name ~~ @role_pages) {
-        %roles_values = fill_txn_roles(\%fields, $ticket, $ARGSRef, $callback_name);
-    }
+    my %roles_values = fill_txn_roles(\%fields, $ticket, $ARGSRef, $callback_name);
 
     my %all_values = (%$ticket_values, %roles_values, %$txn_values);
 
