@@ -40,5 +40,7 @@ if ($ARGSRef->{FCAbort}) {
             }
         }
     }
+
+    delete $ARGSRef->{'FCLastUpdated-Ticket-cur'};
 }
 </%init>
