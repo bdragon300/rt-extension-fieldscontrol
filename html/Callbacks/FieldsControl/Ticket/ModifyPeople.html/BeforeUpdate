@@ -41,6 +41,8 @@ if ($ARGSRef->{FCAbort}) {
         }
     }
 
+    # There is no redirect after successfull change with results=..., therefore
+    # FCLastUpdate holds old value. Delete key in order to reload actual LastUpdated
     delete $ARGSRef->{'FCLastUpdated-Ticket-cur'};
 }
 </%init>
