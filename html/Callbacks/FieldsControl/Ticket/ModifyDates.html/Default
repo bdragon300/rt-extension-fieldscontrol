@@ -19,7 +19,7 @@ if ($ARGSRef->{FCAbort}) {
 	{
 		my @u = (
 			RT->Config->Get('WebURL') =~ s/\/+$//r, # remove trailing slash /
-			'/Ticket/ModifyAll.html?id=',
+			'/Ticket/ModifyDates.html?id=',
 			$TicketObj->id,
 			'&FCAbort=1'
 		);
