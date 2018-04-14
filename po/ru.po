@@ -130,8 +130,8 @@ msgstr "Применяется к"
 msgid "Pages"
 msgstr "Страницы"
 
-msgid "TicketSQL selection"
-msgstr "Выборка TicketSQL"
+msgid "Preliminary selection"
+msgstr "Предварительная выборка"
 
 msgid "New ticket state tests"
 msgstr "Проверки нового состояния тикета"

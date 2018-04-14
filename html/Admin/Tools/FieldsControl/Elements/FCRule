@@ -44,7 +44,7 @@
             </div>
 %           $val = (exists $data->{'searchsql'}) ? $data->{'searchsql'}: '';
             <div class="el">
-                <span class="label"><&|/l&>TicketSQL selection</&></span>
+                <span class="label"><&|/l&>Preliminary selection</&></span>
                 <textarea cols="40" rows="6" name="searchsql" id="searchsql" placeholder="TicketSQL"><% $val %></textarea>
             </div>
 
