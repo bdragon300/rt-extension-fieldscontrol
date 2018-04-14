@@ -1,6 +1,6 @@
 package RT::Extension::FieldsControl;
 
-use 5.010;
+use 5.10.1;
 use strict;
 use warnings;
 use RT::Tickets;
