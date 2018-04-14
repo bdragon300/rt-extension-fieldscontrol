@@ -199,12 +199,12 @@ our $available_ops = {
     'match regex' =>
         sub {
             return '' if (ref($_[1]) eq 'ARRAY');  # Must be regex only
-            return qr/$_[1]/ ~~ $_[0];
+            return $_[0] ~~ /$_[1]/;
         },
     'not match regex' =>
         sub {
             return '' if (ref($_[1]) eq 'ARRAY');  # Must be regex only
-            return ! (qr/$_[1]/ ~~ $_[0]);
+            return ! ($_[0] ~~ /$_[1]/);
         },
     'more than' => 
         sub {
