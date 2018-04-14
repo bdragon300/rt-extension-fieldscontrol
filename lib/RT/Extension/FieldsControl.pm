@@ -308,15 +308,15 @@ sub get_fields_list {
         # 'Role.Name.<subfield>' => 'RT::CustomRole-id.<subfield>'
         my %fields = 
             map {
-                join('.', ('Role', $cr->Name, $_)) => 'RT::CustomRole-' . $cr->id . '.' . $_
+                join('.', ('Role', $cr->Name, $_)) => 'RT::CustomRole-' . $cr->id
             } @$custom_role_subfields;
         @crfields{keys %fields} = values %fields;
     }
     foreach my $role (@standard_ticket_roles) {
-        # 'Role.Name.<subfield>' => 'Name.<subfield>'
+        # 'Role.Name.<subfield>' => 'Name'
         my %fields = 
             map {
-                join('.', ('Role', $role, $_)) => "${role}.$_"
+                join('.', ('Role', $role, $_)) => $role
             } @$custom_role_subfields;
         @crfields{keys %fields} = values %fields;
     }
@@ -690,7 +690,7 @@ sub fill_txn_roles {
 
     # CustomRoleName => RT::CustomRole-id
     my %roles = 
-        map { /^Role\.(.*)\..+$/ => ($fields->{$_} =~ /^([^.]+)\./) } 
+        map { /^Role\.(.*)\..+$/ => $fields->{$_} } 
         grep { /^Role\./ }
         keys %$fields;
 
@@ -1243,7 +1243,7 @@ sub substitute_special {
             return '' unless ($ticket);
 
             my $rolename = $1;
-            my ($sysname) = $args{fields}->{$test->{'field'}} =~ /^([^.]+)\./;
+            my $sysname = $args{fields}->{$test->{'field'}};
             my $rolegrp = $ticket->RoleGroup($sysname);
             return '' unless ($rolegrp->id);
 
