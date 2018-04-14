@@ -531,14 +531,10 @@ sub fill_txn_customfields {
                     Value => $to_add[0]
                 );
                 push @txn_vals, @to_add_n;
-
-                my $maxv = $cf->MaxValues;
-                if ($maxv == 1) {
-                    @txn_vals = ($txn_vals[-1])
-                } elsif ($maxv > 1) {
-                    @txn_vals = grep { defined } @txn_vals[-$maxv..-1];
-                }
             }
+
+            # Its needed to have at least one element to get op callback worked
+            push @txn_vals, '' unless (@txn_vals);
 
         } else {
             my @raw = 
@@ -550,6 +546,9 @@ sub fill_txn_customfields {
                     CustomField => $cf, 
                     Value => $raw[0]
                 );
+
+                # Its needed to have at least one element to get op callback worked
+                push @txn_vals, '' unless (@txn_vals);
             }
         }
 
@@ -565,6 +564,13 @@ sub fill_txn_customfields {
 
             # Its needed to have at least one element to get op callback worked
             push @$res_vals, '' unless (@v);
+        }
+
+        my $maxv = $cf->MaxValues;
+        if ($maxv == 1) {
+            $res_vals = @$res_vals[0];
+        } elsif ($maxv > 1) {
+            $res_vals = [grep { defined } @$res_vals[-$maxv..-1]];
         }
 
         $res{$print_name} = $res_vals;
