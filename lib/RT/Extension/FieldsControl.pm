@@ -1147,48 +1147,14 @@ sub check_ticket {
 
         # Substitute special tags in sfields values
         foreach (@{$rule->{'sfields'}}) {
-            if ($_->{'value'} eq '__old__') {
-                if (exists($ticket_values->{$_->{'field'}})) {
-                    $_->{'value'} = $ticket_values->{$_->{'field'}};
-                } elsif ($_->{'field'} =~ /^CF\.(.*)$/) {
-                    $_->{'value'} = '';
-                    next unless ($ticket);
-
-                    my $cfid = $fields{$_->{'field'}};
-                    my $cfvals = $ticket->CustomFieldValues($cfid);
-                    my @cfvals = map { $_->Content } @{$cfvals->ItemsArrayRef};
-                    undef $cfvals;
-
-                    $_->{'value'} = (scalar(@cfvals) == 1)
-                        ? $cfvals[0]
-                        : \@cfvals;
-                } elsif ($_->{'field'} =~ /^Role\.([^.]+)\..*$/) {
-                    $_->{'value'} = '';
-                    next unless ($ticket);
-
-                    my $rolename = $1;
-                    my ($sysname) = $fields{$_->{'field'}} =~ /^([^.]+)\./;
-                    my $rolegrp = $ticket->RoleGroup($sysname);
-                    next unless ($rolegrp->id);
-
-                    my @members = 
-                        map { $_->MemberObj->Object }
-                        @{$rolegrp->MembersObj->ItemsArrayRef};
-                    my $sf = fill_role_subfields(
-                        $rolename, \@members, $custom_role_subfields
-                    );
-                    undef $rolegrp;
-
-                    $_->{'value'} = $sf->{$_->{'field'}};
-                } else {
-                    $_->{'value'} = '';
-                }
-                $errors->{tests_refer_to_ticket} = 1;
-            } elsif ($_->{'value'} =~ /^__(.*)__$/) {  # Date expression
-                my $date = RT::Date->new( RT::SystemUser );
-                $date->Set( Format => 'unknown', Value => $1 );
-                $_->{'value'} = $date->ISO;
-            }
+            $errors->{tests_refer_to_ticket} = 1 
+                if ($_->{'value'} eq '__old__');
+            
+            my $substituted = substitute_special(
+                test => $_, fields => \%fields, ticket => $ticket,
+                ticket_values => $ticket_values
+            );
+            $_->{'value'} = $substituted if (defined $substituted);
         }
         my $matches = check_txn_fields(\%all_values, $rule->{'sfields'});
         die "INTERNAL ERROR: [$PACKAGE] incorrect config in database. Reconfigure please." 
@@ -1206,46 +1172,14 @@ sub check_ticket {
 
         # Substitute special tags in rfields values
         foreach (@{$rule->{'rfields'}}) {
-            if ($_->{'value'} eq '__old__') {
-                if (exists($ticket_values->{$_->{'field'}})) {
-                    $_->{'value'} = $ticket_values->{$_->{'field'}};
-                } elsif ($_->{'field'} =~ /^CF\.(.*)$/) {
-                    $_->{'value'} = '';
-                    next unless ($ticket);
+            $errors->{tests_refer_to_ticket} = 1 
+                if ($_->{'value'} eq '__old__');
 
-                    my $cfid = $fields{$_->{'field'}};
-                    my $cfvals = $ticket->CustomFieldValues($cfid);
-                    my @cfvals = map { $_->Content } @{$cfvals->ItemsArrayRef};
-                    undef $cfvals;
-
-                    $_->{'value'} = (scalar(@cfvals) == 1)
-                        ? $cfvals[0]
-                        : \@cfvals;
-                } elsif ($_->{'field'} =~ /^Role\.([^.]+)\..*$/) {
-                    $_->{'value'} = '';
-                    next unless ($ticket);
-
-                    my $rolename = $1;
-                    my ($sysname) = $fields{$_->{'field'}} =~ /^([^.]+)\./;
-                    my $rolegrp = $ticket->RoleGroup($sysname);
-                    next unless ($rolegrp->id);
-
-                    my @members = 
-                        map { $_->MemberObj->Object }
-                        @{$rolegrp->MembersObj->ItemsArrayRef};
-                    my $sf = fill_role_subfields(
-                        $rolename, \@members, $custom_role_subfields
-                    );
-                    $_->{'value'} = $sf->{$_->{'field'}};
-                } else {
-                    $_->{'value'} = '';
-                }
-                $errors->{tests_refer_to_ticket} = 1;
-            } elsif ($_->{'value'} =~ /^__(.*)__$/) {  # Date expression
-                my $date = RT::Date->new( RT::SystemUser );
-                $date->Set( Format => 'unknown', Value => $1 );
-                $_->{'value'} = $date->ISO;
-            }
+            my $substituted = substitute_special(
+                test => $_, fields => \%fields, ticket => $ticket,
+                ticket_values => $ticket_values
+            );
+            $_->{'value'} = $substituted if (defined $substituted);
         }
         $matches = check_txn_fields(\%all_values, $rule->{'rfields'});
         die "INTERNAL ERROR: [$PACKAGE] incorrect config in database. Reconfigure please." 
@@ -1264,6 +1198,72 @@ sub check_ticket {
     }
 
     return $errors;
+}
+
+
+=head2 substitute_special(%args) -> $value
+
+Substitutes special tags in test on actual value suitable to be compared later
+
+Parameters:
+
+See function code
+
+Return:
+
+Substituted value or undef if nothing to substitute
+
+=cut
+
+sub substitute_special {
+    # All args are required
+    my %args = (
+        test => undef,
+        fields => undef,
+        ticket => undef,
+        ticket_values => undef,
+        @_
+    );
+    my $test = $args{test};
+    my $ticket = $args{ticket};
+
+    if ($test->{'value'} eq '__old__') {
+        if (exists($args{ticket_values}->{$test->{'field'}})) {
+            return $args{ticket_values}->{$test->{'field'}};
+        } elsif ($test->{'field'} =~ /^CF\.(.*)$/) {
+            return '' unless ($ticket);
+
+            my $cfid = $args{fields}->{$test->{'field'}};
+            my $cfvals = $ticket->CustomFieldValues($cfid);
+            my @cfvals = map { $_->Content } @{$cfvals->ItemsArrayRef};
+            undef $cfvals;
+
+            return (scalar(@cfvals) == 1) ? $cfvals[0] : \@cfvals;
+        } elsif ($test->{'field'} =~ /^Role\.([^.]+)\..*$/) {
+            return '' unless ($ticket);
+
+            my $rolename = $1;
+            my ($sysname) = $args{fields}->{$test->{'field'}} =~ /^([^.]+)\./;
+            my $rolegrp = $ticket->RoleGroup($sysname);
+            return '' unless ($rolegrp->id);
+
+            my @members = 
+                map { $_->MemberObj->Object }
+                @{$rolegrp->MembersObj->ItemsArrayRef};
+            my $sf = fill_role_subfields(
+                $rolename, \@members, $custom_role_subfields
+            );
+            return $sf->{$test->{'field'}};
+        } else {
+            return '';
+        }
+    } elsif ($test->{'value'} =~ /^__(.*)__$/) {  # Date expression
+        my $date = RT::Date->new( RT::SystemUser );
+        $date->Set( Format => 'unknown', Value => $1 );
+        return $date->ISO;
+    }
+
+    return (undef);
 }
 
 
