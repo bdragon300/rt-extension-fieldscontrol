@@ -25,6 +25,20 @@ if ( $session{'CurrentUser'}->HasRight( Right => 'ShowConfigTab', Object => RT->
             description => loc('Create new FieldsControl restriction'),
             path        => '/Admin/Tools/FieldsControl/edit.html?Create=1'
         );
+
+        my $id = (exists $m->request_args->{id}) ? $m->request_args->{id} : undef;
+        if ($id && $m->request_comp->name =~ '(edit|applies).html') {
+            $page_menu->child(basics => 
+                title       => loc('Basics'),
+                description => loc('Restriction basics'),
+                path        => "/Admin/Tools/FieldsControl/edit.html?id=${id}"
+            );
+            $page_menu->child(applies_to => 
+                title       => loc('Applies to'),
+                description => loc('Queues which the restriction applies to'),
+                path        => "/Admin/Tools/FieldsControl/applies.html?id=${id}"
+            );
+        }
     }
 }
 </%init>

@@ -141,6 +141,12 @@ if ($ARGS{'submit'}) {
     # Error message comment
     $rule->{comment} = $ARGS{comment};
 
+    # Applies to
+    $rule->{applies} = {
+        global => '1',
+        queues => []
+    };
+
     # Apply restriction on pages
     my @apply_pages = ();
     foreach my $page (@RT::Extension::FieldsControl::spy_pages) {

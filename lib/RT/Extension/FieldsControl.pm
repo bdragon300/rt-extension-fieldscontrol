@@ -1123,6 +1123,9 @@ sub check_ticket {
         map { (@{$_->{rfields}}, @{$_->{sfields}}) }
         values %restrictions;
 
+    # We always need queue to know whether or not to apply restriction
+    $fields{'Ticket.QueueId'} = $all_fields->{'Ticket.QueueId'};
+
     my $txn_values = fill_txn_fields(\%fields, $ticket, $ARGSRef, $callback_name);
     my $ticket_values = ($ticket) ? fill_ticket_fields(\%fields, $ticket) : {};
 
@@ -1134,6 +1137,13 @@ sub check_ticket {
     foreach my $rule (values %restrictions) {
         next unless ($rule->{'enabled'});
         next unless ($callback_name ~~ $rule->{apply_pages});  # Not applied on page caused request
+
+        my $queueid = $txn_values->{'Ticket.QueueId'} // $ticket_values->{'Ticket.QueueId'};
+        next unless (
+            ! exists ($rule->{applies})
+            || $rule->{applies}->{global} 
+            || $queueid ~~ $rule->{applies}->{queues}
+        );
 
         # Ticket match TicketSQL ("Old state")
         my $ticketsql_ok = 1;

@@ -233,6 +233,32 @@ msgstr "Транзакция.Цифровая подпись"
 msgid "Transaction.Encrypt"
 msgstr "Транзакция.Зашифровать"
 
+
+#
+# applies.html
+#
+
+msgid "Applies to all queues"
+msgstr "Применяется ко всем очередям"
+
+msgid "Apply globally"
+msgstr "Применить глобально"
+
+msgid "Uncheck this box to remove this restriction from all queues and be able to choose specific queues"
+msgstr "Снимите этот флажок, чтобы убрать ограничение со всех очередей (можно будет выбрать отдельные очереди)"
+
+msgid "Check this box to apply this restriction to all queues"
+msgstr "Установите этот флажок, чтобы применить это ограничение ко всем очередям"
+
+msgid "Selected queues"
+msgstr "Выбранные очереди"
+
+msgid "Unselected queues"
+msgstr "Не выбранные очереди"
+
+msgid "Associated queues for restriction: %1"
+msgstr "Связанные очереди для ограничения: %1"
+
 #
 # Other
 #
@@ -242,6 +268,12 @@ msgstr "Список ограничений FieldsControl"
 
 msgid "Create new FieldsControl restriction"
 msgstr "Создать новое ограничение FieldsControl"
+
+msgid "Restriction basics"
+msgstr "Основные настройки ограничения"
+
+msgid "Queues which the restriction applies to"
+msgstr "Очереди, к которым применяется ограничение"
 
 msgid "Name"
 msgstr "Имя"

@@ -1,0 +1,126 @@
+<& /Admin/Elements/Header, Title => $title &>
+<& /Elements/Tabs &>
+
+<& /Elements/ListActions, actions => \@results &>
+
+<form action="applies.html" method="post">
+<input type="hidden" class="hidden" name="id" value="<% $id %>" />
+
+% if ( $apply_globally ) {
+<h2><&|/l&>Applies to all queues</&></h2>
+<input type="checkbox" id="apply-globally" name="apply-globally" checked />
+<label for="apply-globally"><&|/l&>Uncheck this box to remove this restriction from all queues and be able to choose specific queues</&></label>
+% } else {
+<h2><&|/l&>Apply globally</&></h2>
+
+<input type="checkbox" id="apply-globally" name="apply-globally" />
+<label for="apply-globally"><&|/l&>Check this box to apply this restriction to all queues</&></label>
+% if ( $apply_queues->Count ) {
+<h2><&|/l&>Selected queues</&></h2>
+<& /Elements/CollectionList,
+    OrderBy => ['SortOrder', 'Name'],
+    Order => ['ASC', 'ASC'],
+    %ARGS,
+    Collection => $apply_queues,
+    Rows => 0,
+    Page => 1,
+    Format        => $format,
+    DisplayFormat => "'__CheckBox.{unapply-queue}__',". $format,
+    AllowSorting => 0,
+    ShowEmpty    => 0,
+    PassArguments => [
+        qw(id Format Rows Page Order OrderBy),
+    ],
+&>
+
+% }
+
+<h2><&|/l&>Unselected queues</&></h2>
+<& /Elements/CollectionList,
+    OrderBy => ['SortOrder', 'Name'],
+    Order => ['ASC', 'ASC'],
+    %ARGS,
+    Collection => $unapply_queues,
+    Rows          => $rows,
+    Format        => $format,
+    DisplayFormat => "'__CheckBox.{apply-queue}__',". $format,
+    AllowSorting  => 1,
+    ShowEmpty     => 0,
+    PassArguments => [
+        qw(id Format Rows Page Order OrderBy),
+    ],
+&>
+
+% }
+
+<& /Elements/Submit, Name => 'UpdateApplies' &>
+</form>
+
+<%init>
+use Data::Dumper qw{Dumper};
+use experimental 'smartmatch';
+
+unless ($session{'CurrentUser'}->HasRight( Object=> $RT::System, Right => 'SuperUser')) {
+    Abort(loc('This feature is only available to system administrators'));
+}
+
+my %config = RT::Extension::FieldsControl::load_config;
+my $restrictions = $config{restrictions};
+my @results;
+
+$id += 0;
+
+my $rule = $restrictions->{$id};
+unless ($rule) {
+    Abort(loc('ERROR: Invalid id'));
+}
+
+$rule->{applies} = {} unless (exists $rule->{applies});
+my $apply_globally = $rule->{applies}->{global} // 1;
+my $queues = $rule->{applies}->{queues} // [];
+
+if ($ARGS{UpdateApplies}) {
+    $rule->{applies}->{global} = $apply_globally = exists $ARGS{'apply-globally'};
+
+    my @del = (ref $ARGS{'unapply-queue'}) 
+        ? @{$ARGS{'unapply-queue'}} 
+        : ($ARGS{'unapply-queue'} // ());
+    my @add = (ref $ARGS{'apply-queue'}) 
+        ? @{$ARGS{'apply-queue'}} 
+        : ($ARGS{'apply-queue'} // ());
+
+    my @result = (@$queues);
+    @result = grep { ! ($_ ~~ @del) } @result;
+    push @result, @add if (@add);
+
+    $rule->{applies}->{queues} = $queues = \@result;
+
+    my ($res, $msg) = RT::Extension::FieldsControl::write_config(
+        update_r => {$id => $rule}
+    );
+}
+
+# Set up queue collections
+my $apply_queues = RT::Queues->new( RT::SystemUser );
+my $unapply_queues = RT::Queues->new( RT::SystemUser );
+if (@$queues) {
+    $apply_queues->Limit(FIELD => 'id', OPERATOR => 'IN', VALUE => $queues);
+    $unapply_queues->Limit(FIELD => 'id', OPERATOR => 'NOT IN', VALUE => $queues);
+} else {
+    $apply_queues->Limit(FIELD => 'id', OPERATOR => '=', VALUE => '-1');  # 0 items will be returned
+    $unapply_queues->UnLimit;
+}
+$apply_queues->OrderBy(FIELD => 'id');
+$unapply_queues->OrderBy(FIELD => 'id');
+
+my $format = RT->Config->Get('AdminSearchResultFormat')->{Queues}
+    || '__id__,__Name__';
+my $rows = RT->Config->Get('AdminSearchResultRows')->{Queues} || 50;
+my $title = loc(
+    'Associated queues for restriction: [_1]', $rule->{rulename}
+);
+</%init>
+
+<%args>
+$id => 0
+</%args>
