@@ -7,18 +7,34 @@ RT::Extension::FieldsControl -- Conditional user input validation
 This extension validates ticket and transaction fields on each ticket update according on preconfigured restrictions. In few words it controls user input and prevents to get into a forbidden ticket state.
 Ticket fields, transaction fields, custom fields, custom role members can be tested. The extension has Admin UI.
 
-Each restriction can be applied only to certain tickets using TicketSQL selection and/or "new state" tests. Extension verifies user input using control tests only using applicable restrictions. If control tests at least in one restriction have failed then ticket update aborts and failed restrictions appears in error message (with optional comments). Such checks performed at all modify pages.
+Each restriction can be applied only to certain tickets using preliminary TicketSQL selection and/or "new state" tests. Extension verifies user input using control tests only using applicable restrictions. If control tests at least in one restriction have failed then ticket update aborts and failed restrictions appears in error message (with optional comments). Such checks performed at all modify pages.
 Incoming data can be tested against to string, regular expression or current field value.
 
 New state for every field means its value after successfull update. For single-value fields it means just new value. For multi-value fields it means current values + user input.
 
 Some examples:
-* make required fields only for certain tickets (e.g. deny close incident (ticket in "support" queue with CF.{InteractionType}="Incident") with empty CF.{IncidentReason})
-* lock "Client" custom role after initial set for all users, only management or admins can change them
-* deny Correspond via web interface in closed tickets
+* make required fields only for certain tickets (e.g. deny close incident (ticket in "support" queue with CF.{InteractionType}="incident") with empty Priority)
+* lock "Client" custom role after initial set
+* deny Correspond via web interface on closed tickets
 * deny simultaneous change CF.{InteractionType} and CF.{GenerateInvoice}. Useful when you have "trigger" CF (CF.{GenerateInvoice}) and appropriate Action (generate invoice depending on InteractionType). Reason is that RT does not guarantee the executing transactions in certain order, so you can get either old or new CF.{InteractionType} value when Action executed.
 
 The configuration UI available for users with SuperUser right.
+
+Here how its look like. Restriction list:
+
+![Restriction list page](screenshots/restriction_list.png)
+
+Let's take the first example above. For every restriction you can set name, comment, preliminary selection and field tests and also select on which pages this restriction will be active:
+
+![Restriction page](screenshots/restriction.png)
+
+Each restriction can be applied to all queues or only specified ones:
+
+![Applies to page](screenshots/apply_to_queues.png)
+
+If restriction has failed then user sees fields that caused fail, restriction name and comment (if any):
+
+![Failed restriction on ticket modify page](screenshots/restriction_failed.png)
 
 # Dependencies:
 
