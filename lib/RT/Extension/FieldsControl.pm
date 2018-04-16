@@ -565,6 +565,18 @@ sub fill_txn_customfields {
         if (@txn_vals) {
             $res_vals = \@txn_vals;
         } else {
+            # If CF has select type and predefined values dependent on another
+            # CF and user has chosen its value so current CF has no values at 
+            # all and absent in ARGSRef, despite it appear on Create.html page
+            # We only guess its existence only by '...-Magic' ARGSRef key 
+            unless ($ticket) {
+                next unless (
+                    grep /^Object-[:\w]+-[0-9]*-CustomField-${cf_id}-Values-Magic$/, 
+                    keys %$ARGSRef
+                );
+            }
+            next unless ($ticket); # Skip if not CF on Create.html
+
             my @v = ();
             while (my $v = $vals_collection->Next) {
                 push @v, $v->Content;
