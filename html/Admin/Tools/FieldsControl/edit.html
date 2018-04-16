@@ -129,7 +129,12 @@ if ($ARGS{'remove'}) {
 if ($ARGS{'submit'}) {
     my $i = 1;
     my $tickets = RT::Tickets->new( RT::SystemUser ); #Object for checking SQL correctness
-    $rule = {};
+    $rule = {
+        applies => $rule->{applies} || {
+            global => '1',
+            queues => []
+        }
+    };
 
     # Retrieve rule name
     push @results, loc("ERROR: Name field is required") unless ($ARGS{'name'});
@@ -140,12 +145,6 @@ if ($ARGS{'submit'}) {
     
     # Error message comment
     $rule->{comment} = $ARGS{comment};
-
-    # Applies to
-    $rule->{applies} = {
-        global => '1',
-        queues => []
-    };
 
     # Apply restriction on pages
     my @apply_pages = ();
