@@ -11,8 +11,8 @@ msgstr ""
 msgid "FieldsControl configuration"
 msgstr "Конфигурация FieldsControl"
 
-msgid "\"Fails if\" section fields"
-msgstr "Поля секции \"Неудача, если\""
+msgid "Comments"
+msgstr "Комментарии"
 
 #
 #edit.html
