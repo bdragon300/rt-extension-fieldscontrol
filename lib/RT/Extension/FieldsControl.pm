@@ -493,12 +493,21 @@ sub fill_txn_customfields {
 
     my %res;
 
-    my $cfs = $ticket->CustomFields;
+    my $cfs;
+    if ($ticket) {
+        $cfs = $ticket->CustomFields;
+    } else {
+        $cfs = RT::CustomFields->new( RT::SystemUser );
+        $cfs->UnLimit();
+    }
+    
     while (my $cf = $cfs->Next) {
         my $print_name = 'CF.' . $cf->Name;
         next unless (exists $fields->{$print_name});
 
-        my $vals_collection = $cf->ValuesForObject($ticket);
+        my $vals_collection = ($ticket) 
+            ? $cf->ValuesForObject($ticket) 
+            : RT::ObjectCustomFieldValues->new( RT::SystemUser );
 
         my $cf_id = $cf->id;
         my @txn_vals = ();
