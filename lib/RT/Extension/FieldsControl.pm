@@ -1263,6 +1263,8 @@ sub substitute_special {
             my @cfvals = map { $_->Content } @{$cfvals->ItemsArrayRef};
             undef $cfvals;
 
+            push @cfvals, '' unless (@cfvals);
+
             return (scalar(@cfvals) == 1) ? $cfvals[0] : \@cfvals;
         } elsif ($test->{'field'} =~ /^Role\.([^.]+)\..*$/) {
             return '' unless ($ticket);
