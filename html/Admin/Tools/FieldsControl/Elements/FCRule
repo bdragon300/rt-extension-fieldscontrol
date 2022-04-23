@@ -135,7 +135,7 @@
     function add_field(e) {
         field_container = jQuery(e.target).parent().siblings('.field-container').first();
         new_field_container = jQuery(e.target).parent().siblings(".new-field-container").first();
-        fields_count = field_container.find(".field").size();
+        fields_count = field_container.find(".field").length;
 
         str = new_field_container
             .html()
